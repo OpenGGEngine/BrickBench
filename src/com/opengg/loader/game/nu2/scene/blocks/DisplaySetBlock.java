@@ -267,7 +267,7 @@ public class DisplaySetBlock extends DefaultFileBlock {
             int meshOffset = readPointer();
 
             List<FileMaterial> materials = new ArrayList<>();
-            List<GameRenderable<?>> renderables = new ArrayList<>();
+            List<GSCMesh> renderables = new ArrayList<>();
             List<Integer> renderableIndices = new ArrayList<>();
 
             fileBuffer.position(materialOffset);

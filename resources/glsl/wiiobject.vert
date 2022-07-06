@@ -65,15 +65,15 @@ void main() {
     }
 
     vec4 reverse = model * vec4(position, 1.0f);
-    reverse.x = -reverse.x;
     pos = reverse.xyz;
+    reverse.x = -reverse.x;
     if(billboardSize.x != 0 && billboardSize.y != 0){
         vec3 camRight= vec3(view[0][0], view[1][0], view[2][0]);
         vec3 camUp = vec3(view[0][1], view[1][1], view[2][1]);
-        pos = (billboardCenter*vec3(-1,1,1)) + camRight * pos.x * billboardSize.x + camUp * pos.y * billboardSize.y;
+        pos = billboardCenter + camRight * pos.x * billboardSize.x + camUp * pos.y * billboardSize.y;
     }
 
-    gl_Position = projection * view * vec4(pos, 1.0f);
+    gl_Position = projection * view * vec4(reverse.xyz, 1.0f);
 
     pipeColorSet0();
 

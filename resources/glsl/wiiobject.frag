@@ -32,42 +32,43 @@ float specularFactor = 0;
 float ldotn0;
 float ldotn1;
 float ldotn2;
+vec3 diffuseLight = vec3(1);
+vec3 specularLight = vec3(0);
 
-vec3 getLightColor(){
-    vec3 diffuseLight = vec3(0);
-    vec3 specularLight = vec3(0);
-
-    if((globalUseLightmaps == 1 && LIGHTMAP_STAGE != 0 && lightmapReady == 1)){
-      //  if((LIGHTMAP_STAGE == 2 && false) || globalForceLightmapUsage == 1){
-        if(lightmapReady == 0 && LIGHTMAP_STAGE == 0){
-            vec3 weights = vec3(
-            dot(surfaceNormal.rgb, vec3(-0.4082482904,	-0.7071067811,	0.5773502691)),
-            dot(surfaceNormal.rgb, vec3(-0.4082482904,	0.7071067811,	0.5773502691)),
-            dot(surfaceNormal.rgb, vec3(0.8164965809,	0.0,			0.5773502691))
-            );
-            weights = max(weights, vec3(0));
-
-            vec4 lmcol1 = texture(lightmap1, lightmapCoord);
-            vec4 lmcol2 = texture(lightmap3, lightmapCoord);
-            vec4 lmcol3 = texture(lightmap4, lightmapCoord);
-            diffuseLight = (lmcol1.rgb * weights.x) + (lmcol2.rgb * weights.y) + (lmcol3.rgb * weights.z)  * vec3(8);
-
-            diffuseLight = max(diffuseLight, vec3(0.2f)); //temporary
-        }else{
-            diffuseLight = texture(lightmap1, lightmapCoord).rgb;
+void getLightColor(){
+    diffuseLight = vec3(0);
+    if (LIGHTMAP_STAGE == 0 || lightmapReady == 0) {
+        if (LIGHTING_STAGE == 0) {
+            diffuseLight = vec3(1,1,1);
         }
+
+        if(PRELIGHT_FX == 1 && PRELIGHT_FX_LIVE_SPECULAR == 1){
+            specularFactor = 0.3 * fs_layer0_color.b + 0.59 * fs_layer0_color.g + 0.11 * fs_layer0_color.r;
+        }
+    } else if (LIGHTMAP_STAGE == 1) {
+        diffuseLight = texture(lightmap1, lightmapCoord).rgb;
+
+        if(PRELIGHT_FX == 1 && PRELIGHT_FX_LIVE_SPECULAR == 1){
+            specularFactor = 0.3 * diffuseLight.r + 0.59 * diffuseLight.g + 0.11 * diffuseLight.b;
+        }
+    } else if(LIGHTMAP_STAGE == 2){
+        vec3 weights = vec3(
+        dot(surfaceNormal.rgb, vec3(-0.4082482904,	-0.7071067811,	0.5773502691)),
+        dot(surfaceNormal.rgb, vec3(-0.4082482904,	0.7071067811,	0.5773502691)),
+        dot(surfaceNormal.rgb, vec3(0.8164965809,	0.0,			0.5773502691)));
+        weights = max(weights, vec3(0));
+
+        vec4 lmcol1 = texture(lightmap1, lightmapCoord);
+        vec4 lmcol2 = texture(lightmap3, lightmapCoord);
+        vec4 lmcol3 = texture(lightmap4, lightmapCoord);
+        diffuseLight = (lmcol1.rgb * weights.x) + (lmcol2.rgb * weights.y) + (lmcol3.rgb * weights.z)  * vec3(8);
 
         if(lightmapCoord.x < 0.0f || lightmapCoord.x == 0.0f){
-            diffuseLight = vec3(1);
-            if(PRELIGHT_FX == 1 && PRELIGHT_FX_LIVE_SPECULAR == 1){
-                specularFactor = 0.3 * fs_layer0_color.b + 0.59 * fs_layer0_color.g + 0.11 * fs_layer0_color.r;
-            }
-        }else{
-            if(PRELIGHT_FX == 1 && PRELIGHT_FX_LIVE_SPECULAR == 1){
-                specularFactor = 0.3 * diffuseLight.r + 0.59 * diffuseLight.g + 0.11 * diffuseLight.b;
-            }
+            diffuseLight = vec3(1);    
         }
-    }else if (globalUseDynamicLights == 1 && LIGHTING_STAGE != 0){
+    }
+
+    if (LIGHTING_STAGE != 0){
         if(PRELIGHT_FX == 1){
             diffuseLight = vec3(1);
         }else{
@@ -81,14 +82,11 @@ vec3 getLightColor(){
                 diffuseLight += ldotn2 * light2.color;
             }
 
-            diffuseLight = max(vec3(0.2f), diffuseLight);
+            if (LIGHTING_STAGE != 1) {
+                diffuseLight += ambientColor.rgb;
+            }
         }
-    }else{
-        diffuseLight = vec3(1);
-        specularLight = vec3(1);
     }
-
-    return diffuseLight;
 }
 
 vec4 getColor(){
@@ -121,24 +119,24 @@ vec4 getColor(){
     return surfaceColor;
 }
 
-vec4 shadeSurface(vec4 surfaceColor, vec3 diffuseLight){
+vec4 shadeSurface(vec4 surfaceColor){
     if(LIGHTMAP_STAGE != 0 && globalUseLightmaps == 1){
         if(PRELIGHT_FX == 1 && LIGHTMAP_STAGE == 2){
-            return vec4(surfaceColor.rgb * diffuseLight.rgb, surfaceColor.a);
+            return vec4(surfaceColor.rgb * diffuseLight.rgb + specularLight, surfaceColor.a);
         }else{
-            return vec4(surfaceColor.rgb * diffuseLight.rgb, surfaceColor.a);
+            return vec4(surfaceColor.rgb * diffuseLight.rgb + specularLight, surfaceColor.a);
         }
     }else if(PRELIGHT_FX == 1){
-        return vec4(surfaceColor.rgb * fs_layer0_color.bgr, surfaceColor.a);
+        return vec4(surfaceColor.rgb * fs_layer0_color.bgr + specularLight, surfaceColor.a);
     }else if(LIGHTING_STAGE == 0){
         return surfaceColor;
     }else{
-        return vec4(surfaceColor.rgb * diffuseLight.rgb, surfaceColor.a);
+        return vec4(surfaceColor.rgb * diffuseLight.rgb + specularLight, surfaceColor.a);
     }
 }
 
 void calculateNormal(){
-    if(SURFACE_TYPE == 1 && false){
+    if(SURFACE_TYPE == 1){
         surfaceNormal = ((texture(surface_sampler, normalCoord).agbr * 2) - 1) * vec4(normal,1);
     }else{
         surfaceNormal = vec4(normal,1);
@@ -168,14 +166,11 @@ void main() {
     compute_ldotn();
 
     vec4 surfaceColor = getColor();
-    vec3 light = vec3(1);
-    if(globalApplyLights == 1){
-        light = getLightColor();
-    }
-    vec4 shadedSurface = shadeSurface(surfaceColor, light);
+    getLightColor();
+
+    vec4 shadedSurface = shadeSurface(surfaceColor);
 
     fcolor = shadedSurface;
-
     if(muteColors != 0){
         float luminance = dot(fcolor.rgb, vec3(0.2125, 0.7154, 0.0721));
         fcolor.rgb = vec3(luminance, luminance, luminance) * 0.4f;

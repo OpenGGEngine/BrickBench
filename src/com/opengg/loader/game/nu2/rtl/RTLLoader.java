@@ -8,23 +8,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class RTLLoader {
-    public static void newLoad(ByteBuffer data){
-        int version = data.getInt();
-        data.position(0x5c);
-        int flag = data.getInt();
-        data.position(4);
-        int position = data.position();
-        while(flag != 0){
-            data.position(position);
-            data.getFloat();
-            data.position(position+64);
-            data.getFloat();
-            data.position(position + 0x39);
-            flag = data.getInt();
-            position += 0x23;
-        }
-    }
-
     public static void load(ByteBuffer data, NU2MapData mapData) {
         data.order(ByteOrder.LITTLE_ENDIAN);
         int version = data.getInt();
@@ -44,15 +27,14 @@ public class RTLLoader {
             Vector3f color = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f u4 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f u5 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
-            mapData.rtl().lights().add(new RTLLight(pos, color, address));
 
            // System.out.println(u1 + " | " + u2 + " |\n " + u3 + " | " + u4 + " |\n " + u5);
             //MapViewer.pointsToV(u1);
             //MapViewer.textPoints.add(Tuple.of(u1.toString(),u1));
             //Large
-            float unk1 = data.getFloat();
-            float unk2 = data.getFloat();
-            //System.out.println(unk1 + "," + unk2);
+            float radius = data.getFloat();
+            float falloff = data.getFloat();
+
             float d1 = data.getFloat();
             float d2 = data.getFloat();
             float d3 = data.getFloat();
@@ -62,21 +44,23 @@ public class RTLLoader {
             var unk = data.getFloat();//data.getInt();
           //  System.out.println(unk);
 
-            data.getShort();
+            var type = RTLLight.LightType.getLightTypeFromId((byte) data.getShort());
             data.getShort();
             data.getShort();
             data.getShort();
 
             data.getInt();
-
+                
             data.getShort();
             data.getShort();
 
-            data.getInt();
-            data.getInt();
-            data.getInt();
+            var i1 = data.getInt();
+            var multiplier = data.getFloat();
+            var i2 = data.getInt();
+
+            if (type != RTLLight.LightType.INVALID)
+                mapData.rtl().lights().add(new RTLLight(pos, color, type, radius, falloff, multiplier, address));
             data.position(firstPosition + 0x8c * i);
-            //System.out.println("--end--");
         }
         //System.out.println("---------------------------------------------");
         int num1 = switch (version){

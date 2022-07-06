@@ -1,15 +1,22 @@
 package com.opengg.loader.game.nu2.scene;
 
 import com.opengg.core.engine.Resource;
+import com.opengg.core.math.Vector3f;
 import com.opengg.core.model.io.ModelExporter;
 import com.opengg.core.render.Renderable;
 import com.opengg.core.render.internal.opengl.OpenGLRenderer;
 import com.opengg.core.render.shader.ShaderController;
+import com.opengg.core.render.shader.UniformContainer;
 import com.opengg.loader.editor.EditorState;
 import com.opengg.loader.MapEntity;
+import com.opengg.loader.game.nu2.NU2MapData;
+import com.opengg.loader.game.nu2.rtl.RTLLight;
 import com.opengg.loader.game.nu2.scene.blocks.SceneExporter;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,18 +26,34 @@ public record GameModel(String name,
                         int modelAddress,
                         int materialListAddress,
                         int meshListAddress,
-                        List<Integer> meshCommandIndices)
+                        List<Integer> meshCommandIndices,
+                        boolean usesLights)
         implements Renderable, MapEntity<GameModel> {
+
+    public GameModel(String name,
+                    List<GameModelPart> modelParts,
+                    int modelAddress,
+                    int materialListAddress,
+                    int meshListAddress,
+                    List<Integer> meshCommandIndices) {
+        this(name, modelParts, modelAddress, materialListAddress, meshListAddress, meshCommandIndices,
+            modelParts.stream().anyMatch(m -> m.material().getDefines().get("LIGHTMAP_STAGE") == 0));
+    }
 
     @Override
     public void render(){
-        ShaderController.setUniform("useLights", 1);
+        ShaderController.setUniform("useLights", usesLights ? 1 : 0);
         OpenGLRenderer.getOpenGLRenderer().setBackfaceCulling(false);
+        
+        if(usesLights){
+            updateLights();
+        }
 
         for(var command : modelParts){
-            command.material.apply();
-            if(command.renderable != null)
+            if(command.renderable != null) {
+                command.material.apply();
                 command.renderable.render();
+            }
         }
 
         OpenGLRenderer.getOpenGLRenderer().setDepthTest(true);
@@ -44,6 +67,39 @@ public record GameModel(String name,
         ShaderController.setUniform("alphaCutoff", 0.1f);
     }
 
+    private void updateLights(){
+        var allLights = ((NU2MapData) EditorState.getActiveMap().levelData()).rtl().lights();
+
+        var ambientLights = new ArrayList<ComputedLight>();
+        var lights = new ArrayList<ComputedLight>();
+        var pos = ((UniformContainer.Matrix4fContainer) ShaderController.getUniform("model")).contents().transform(new Vector3f());
+        for(var light : allLights){
+            var distance = light.pos().distanceTo(pos);
+            if(light.falloff() > distance){
+                var influence = Math.min((distance - light.falloff()) / (light.distance() - light.falloff()), 1);
+                if (light.type() == RTLLight.LightType.AMBIENT) {
+                    System.out.println(light.multiplier());
+                    ambientLights.add(new ComputedLight(light, influence));
+                } else {
+                    lights.add(new ComputedLight(light, influence));
+                }
+            }
+        }
+
+        ambientLights.sort(Comparator.comparingDouble(c1 -> c1.score));
+        lights.sort(Comparator.comparingDouble(c1 -> c1.score));
+        Collections.reverse(lights);
+        Collections.reverse(ambientLights);
+       
+        ShaderController.setUniform("LIGHTING_LIGHTS_COUNT", lights.size());
+        ShaderController.setUniform("ambientColor", ambientLights.stream().map(a -> a.light().color().multiply(a.score() * a.light().multiplier())).reduce(new Vector3f(0), (a,b) -> a.add(b)));
+
+        for(int i = 0; i < lights.size() && i < 3; i++){
+            ShaderController.setUniform("light" + i + ".pos", lights.get(i).light().pos());
+            ShaderController.setUniform("light" + i + ".color", lights.get(i).light().color().multiply(lights.get(i).score() * lights.get(i).light().multiplier()));
+        }
+    }
+    
     public void export(){
         var name = EditorState.getActiveMap().levelData().name() + "_" + this.name();
         var dir = Resource.getUserDataPath().resolve(Path.of("export", "models", name));
@@ -76,5 +132,6 @@ public record GameModel(String name,
         );
     }
 
-    public record GameModelPart(FileMaterial material, GameRenderable<?> renderable, int sourceCommandIndex){}
+    private record ComputedLight(RTLLight light, float score){}
+    public record GameModelPart(FileMaterial material, GSCMesh renderable, int sourceCommandIndex){}
 }

@@ -17,6 +17,7 @@ layout(set = 6, binding = 2) unwrap uniform LegoMaterial{
     float alphaCutoff;
 
     vec4 layer0_diffuse;
+    vec3 ambientColor;
 
     int LIGHTMAP_STAGE;
     int LIGHTING_STAGE;
