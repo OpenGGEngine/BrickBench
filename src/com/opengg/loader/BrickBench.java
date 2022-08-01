@@ -506,6 +506,7 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
                 return false;
             }
         }
+        return true;
     }
 
     /**
