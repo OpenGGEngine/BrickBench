@@ -736,10 +736,9 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
 
             OpenGG.endApplication();
 
-            while(!OpenGG.getEnded()) {}
-
             GGConsole.log("Closing window");
             window.dispose();
+            System.exit(0);
        // });
     }
 
