@@ -28,7 +28,7 @@ public class RTLLoader {
             Vector3f u4 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f u5 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
 
-           // System.out.println(u1 + " | " + u2 + " |\n " + u3 + " | " + u4 + " |\n " + u5);
+            System.out.println(" | " + u2 + " | " + u4 + " | " + u5);
             //MapViewer.pointsToV(u1);
             //MapViewer.textPoints.add(Tuple.of(u1.toString(),u1));
             //Large
@@ -42,7 +42,6 @@ public class RTLLoader {
             //System.out.println(d1+","+d2+","+d3+","+d4);
 
             var unk = data.getFloat();//data.getInt();
-          //  System.out.println(unk);
 
             var type = RTLLight.LightType.getLightTypeFromId((byte) data.getShort());
             data.getShort();
@@ -59,7 +58,7 @@ public class RTLLoader {
             var i2 = data.getInt();
 
             if (type != RTLLight.LightType.INVALID)
-                mapData.rtl().lights().add(new RTLLight(pos, color, type, radius, falloff, multiplier, address));
+                mapData.rtl().lights().add(new RTLLight(pos, type == RTLLight.LightType.DIRECTIONAL ? new Vector3f(1) : color, type, radius, falloff, type == RTLLight.LightType.DIRECTIONAL ? 1 : multiplier, address));
             data.position(firstPosition + 0x8c * i);
         }
         //System.out.println("---------------------------------------------");

@@ -75,10 +75,9 @@ public record GameModel(String name,
         var pos = ((UniformContainer.Matrix4fContainer) ShaderController.getUniform("model")).contents().transform(new Vector3f());
         for(var light : allLights){
             var distance = light.pos().distanceTo(pos);
-            if(light.falloff() > distance){
-                var influence = Math.min((distance - light.falloff()) / (light.distance() - light.falloff()), 1);
+            if(light.falloff() > distance || light.type() == RTLLight.LightType.CAMDIR){
+                var influence = light.type() == RTLLight.LightType.CAMDIR ? 2.0f : Math.min((light.falloff() - distance) / light.distance(), 1);
                 if (light.type() == RTLLight.LightType.AMBIENT) {
-                    System.out.println(light.multiplier());
                     ambientLights.add(new ComputedLight(light, influence));
                 } else {
                     lights.add(new ComputedLight(light, influence));

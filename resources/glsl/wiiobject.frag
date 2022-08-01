@@ -45,13 +45,13 @@ void getLightColor(){
         if(PRELIGHT_FX == 1 && PRELIGHT_FX_LIVE_SPECULAR == 1){
             specularFactor = 0.3 * fs_layer0_color.b + 0.59 * fs_layer0_color.g + 0.11 * fs_layer0_color.r;
         }
-    } else if (LIGHTMAP_STAGE == 1) {
+    } else if (LIGHTMAP_STAGE == 1 || LIGHTMAP_STAGE == 2) {
         diffuseLight = texture(lightmap1, lightmapCoord).rgb;
 
         if(PRELIGHT_FX == 1 && PRELIGHT_FX_LIVE_SPECULAR == 1){
             specularFactor = 0.3 * diffuseLight.r + 0.59 * diffuseLight.g + 0.11 * diffuseLight.b;
         }
-    } else if(LIGHTMAP_STAGE == 2){
+    } else if(LIGHTMAP_STAGE == 2 || false){
         vec3 weights = vec3(
         dot(surfaceNormal.rgb, vec3(-0.4082482904,	-0.7071067811,	0.5773502691)),
         dot(surfaceNormal.rgb, vec3(-0.4082482904,	0.7071067811,	0.5773502691)),
