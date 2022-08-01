@@ -514,7 +514,7 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
      *
      */
     public boolean loadNewProject(Path projectFile, boolean saveToRecents) {
-        if (showSaveProjectPrompt()) return false;
+        if (!showSaveProjectPrompt()) return false;
 
         pointsToView.clear();
         TextureManager.clearCache();
