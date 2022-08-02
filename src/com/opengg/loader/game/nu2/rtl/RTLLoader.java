@@ -23,12 +23,11 @@ public class RTLLoader {
         for (int i = 0; i < lightOneCount; i++) {
             int address = data.position();
             Vector3f pos = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
-            Vector3f u2 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
+            Vector3f rot = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f color = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f u4 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f u5 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
 
-            System.out.println(" | " + u2 + " | " + u4 + " | " + u5);
             //MapViewer.pointsToV(u1);
             //MapViewer.textPoints.add(Tuple.of(u1.toString(),u1));
             //Large
@@ -39,7 +38,7 @@ public class RTLLoader {
             float d2 = data.getFloat();
             float d3 = data.getFloat();
             float d4 = data.getFloat();
-            //System.out.println(d1+","+d2+","+d3+","+d4);
+            System.out.println(d1+" "+d2+" "+d3+" "+d4);
 
             var unk = data.getFloat();//data.getInt();
 
@@ -53,12 +52,16 @@ public class RTLLoader {
             data.getShort();
             data.getShort();
 
+            data.getInt();
+            data.getInt();
+            data.getInt();
+
             var i1 = data.getInt();
             var multiplier = data.getFloat();
             var i2 = data.getInt();
 
             if (type != RTLLight.LightType.INVALID)
-                mapData.rtl().lights().add(new RTLLight(pos, type == RTLLight.LightType.DIRECTIONAL ? new Vector3f(1) : color, type, radius, falloff, type == RTLLight.LightType.DIRECTIONAL ? 1 : multiplier, address));
+                mapData.rtl().lights().add(new RTLLight(pos, rot, type == RTLLight.LightType.DIRECTIONAL ? new Vector3f(1) : color, type, radius, falloff, type == RTLLight.LightType.DIRECTIONAL ? 1 : multiplier, i));
             data.position(firstPosition + 0x8c * i);
         }
         //System.out.println("---------------------------------------------");

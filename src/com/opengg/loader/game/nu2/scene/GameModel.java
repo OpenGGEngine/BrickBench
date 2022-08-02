@@ -94,8 +94,13 @@ public record GameModel(String name,
         ShaderController.setUniform("ambientColor", ambientLights.stream().map(a -> a.light().color().multiply(a.score() * a.light().multiplier())).reduce(new Vector3f(0), (a,b) -> a.add(b)));
 
         for(int i = 0; i < lights.size() && i < 3; i++){
-            ShaderController.setUniform("light" + i + ".pos", lights.get(i).light().pos());
-            ShaderController.setUniform("light" + i + ".color", lights.get(i).light().color().multiply(lights.get(i).score() * lights.get(i).light().multiplier()));
+            var light = lights.get(i);
+            if (light.light().type() == RTLLight.LightType.CAMDIR || light.light().type() == RTLLight.LightType.DIRECTIONAL) {
+                ShaderController.setUniform("light" + i + ".pos", light.light().rot());
+            } else {
+                ShaderController.setUniform("light" + i + ".pos", light.light().pos().subtract(pos));
+            }
+            ShaderController.setUniform("light" + i + ".color", light.light().color().multiply(light.score() * light.light().multiplier()));
         }
     }
     

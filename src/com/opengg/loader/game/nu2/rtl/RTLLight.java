@@ -9,7 +9,7 @@ import com.opengg.loader.loading.MapWriter;
 
 import java.util.List;
 
-public record RTLLight (Vector3f pos, Vector3f color, LightType type, float distance, float falloff, float multiplier, int address) implements MapEntity<RTLLight>, Selectable {
+public record RTLLight (Vector3f pos, Vector3f rot, Vector3f color, LightType type, float distance, float falloff, float multiplier, int address) implements MapEntity<RTLLight>, Selectable {
     @Override
     public String name() {
         return "Light_" + Integer.toHexString(address);
@@ -24,6 +24,8 @@ public record RTLLight (Vector3f pos, Vector3f color, LightType type, float dist
     public List<Property> properties() {
         return List.of(
                 new VectorProperty("Position", pos, true, true),
+
+                new VectorProperty("Angle", rot, true, true),
                 new ColorProperty("Color", color),
                 new EnumProperty("Light Type", type, true),
                 new FloatProperty("Distance", distance, true),
@@ -36,6 +38,7 @@ public record RTLLight (Vector3f pos, Vector3f color, LightType type, float dist
     public void applyPropertyEdit(String propName, Property newValue) {
         switch (newValue) {
             case VectorProperty vp && propName.equals("Position") -> MapWriter.applyPatch(MapWriter.WritableObject.LIGHTS, address, vp.value().toLittleEndianByteBuffer());
+            case VectorProperty vp && propName.equals("Angle") -> MapWriter.applyPatch(MapWriter.WritableObject.LIGHTS, address + 12, vp.value().toLittleEndianByteBuffer());
             case ColorProperty cp && propName.equals("Color") -> MapWriter.applyPatch(MapWriter.WritableObject.LIGHTS, address + 12 + 12, cp.value().toLittleEndianByteBuffer());
             case EnumProperty ep && propName.equals("Light Type") -> MapWriter.applyPatch(MapWriter.WritableObject.LIGHTS, address + 0x58, new byte[]{(byte) ((LightType)ep.value()).BYTE_VALUE});
             case FloatProperty fp && propName.equals("Distance") -> MapWriter.applyPatch(MapWriter.WritableObject.LIGHTS, address + 0x3C, Util.littleEndian(fp.value()));

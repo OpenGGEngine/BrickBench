@@ -36,7 +36,6 @@ vec3 diffuseLight = vec3(1);
 vec3 specularLight = vec3(0);
 
 void getLightColor(){
-    diffuseLight = vec3(0);
     if (LIGHTMAP_STAGE == 0 || lightmapReady == 0) {
         if (LIGHTING_STAGE == 0) {
             diffuseLight = vec3(1,1,1);
@@ -51,7 +50,7 @@ void getLightColor(){
         if(PRELIGHT_FX == 1 && PRELIGHT_FX_LIVE_SPECULAR == 1){
             specularFactor = 0.3 * diffuseLight.r + 0.59 * diffuseLight.g + 0.11 * diffuseLight.b;
         }
-    } else if(LIGHTMAP_STAGE == 2 || false){
+    } else if(LIGHTMAP_STAGE == 2 && false){
         vec3 weights = vec3(
         dot(surfaceNormal.rgb, vec3(-0.4082482904,	-0.7071067811,	0.5773502691)),
         dot(surfaceNormal.rgb, vec3(-0.4082482904,	0.7071067811,	0.5773502691)),
@@ -68,7 +67,7 @@ void getLightColor(){
         }
     }
 
-    if (LIGHTING_STAGE != 0){
+    if (LIGHTING_STAGE != 0 && LIGHTMAP_STAGE == 0){
         if(PRELIGHT_FX == 1){
             diffuseLight = vec3(1);
         }else{
@@ -151,13 +150,13 @@ void calculateNormal(){
 
 void compute_ldotn(){
     if(LIGHTING_LIGHTS_COUNT > 0){
-        ldotn0 = max(0, dot(surfaceNormal.rgb, normalize(light0.pos - pos)));
+        ldotn0 = max(0, dot(normalize(light0.pos), surfaceNormal.rgb));
     }
     if(LIGHTING_LIGHTS_COUNT > 1){
-        ldotn1 = max(0, dot(surfaceNormal.rgb, normalize(light1.pos - pos)));
+        ldotn1 = max(0, dot(normalize(light1.pos), surfaceNormal.rgb));
     }
     if(LIGHTING_LIGHTS_COUNT > 2){
-        ldotn2 = max(0, dot(surfaceNormal.rgb, normalize(light2.pos - pos)));
+        ldotn2 = max(0, dot(normalize(light2.pos), surfaceNormal.rgb));
     }
 }
 
