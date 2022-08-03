@@ -91,7 +91,7 @@ public record GameModel(String name,
         Collections.reverse(ambientLights);
        
         ShaderController.setUniform("LIGHTING_LIGHTS_COUNT", lights.size());
-        ShaderController.setUniform("ambientColor", ambientLights.stream().map(a -> a.light().color().multiply(a.score() * a.light().multiplier())).reduce(new Vector3f(0), (a,b) -> a.add(b)));
+        ShaderController.setUniform("ambientColor", ambientLights.stream().map(a -> a.light().color().multiply(a.light().multiplier())).reduce(new Vector3f(0), (a,b) -> a.add(b)));
 
         for(int i = 0; i < lights.size() && i < 3; i++){
             var light = lights.get(i);
@@ -100,7 +100,8 @@ public record GameModel(String name,
             } else {
                 ShaderController.setUniform("light" + i + ".pos", light.light().pos().subtract(pos));
             }
-            ShaderController.setUniform("light" + i + ".color", light.light().color().multiply(light.score() * light.light().multiplier()));
+
+            ShaderController.setUniform("light" + i + ".color", light.light().color().multiply(light.light().multiplier()));//.multiply(light.score() * light.light().multiplier()));
         }
     }
     

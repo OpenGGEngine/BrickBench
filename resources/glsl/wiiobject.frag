@@ -29,10 +29,10 @@ uniform layout(set = 1, binding = 1) sampler2D Kd;
 
 vec4 surfaceNormal;
 float specularFactor = 0;
-float ldotn0;
-float ldotn1;
-float ldotn2;
-vec3 diffuseLight = vec3(1);
+float ldotn0 = 0;
+float ldotn1 = 0;
+float ldotn2 = 0;
+vec3 diffuseLight = vec3(0);
 vec3 specularLight = vec3(0);
 
 void getLightColor(){
@@ -81,9 +81,9 @@ void getLightColor(){
                 diffuseLight += ldotn2 * light2.color;
             }
 
-            if (LIGHTING_STAGE != 1) {
-                diffuseLight += ambientColor.rgb;
-            }
+           // if (LIGHTING_STAGE != 1) {
+           //     diffuseLight += ambientColor.rgb;
+           // }
         }
     }
 }
@@ -175,6 +175,8 @@ void main() {
         fcolor.rgb = vec3(luminance, luminance, luminance) * 0.4f;
         fcolor.a = min(fcolor.a, 0.4f);
     }
+
+    //fcolor.rgb = light0.color;
 
     if(fcolor.a < alphaCutoff) discard;
 }

@@ -24,7 +24,6 @@ public record RTLLight (Vector3f pos, Vector3f rot, Vector3f color, LightType ty
     public List<Property> properties() {
         return List.of(
                 new VectorProperty("Position", pos, true, true),
-
                 new VectorProperty("Angle", rot, true, true),
                 new ColorProperty("Color", color),
                 new EnumProperty("Light Type", type, true),
