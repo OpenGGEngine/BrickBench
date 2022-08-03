@@ -1,4 +1,4 @@
-package com.opengg.loader.loading;
+package com.opengg.loader.editor.hook;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeLibraryLocator;
