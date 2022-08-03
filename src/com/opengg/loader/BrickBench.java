@@ -306,6 +306,7 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
                         .setRenderer(WindowOptions.RendererType.OPENGL)
                         .setVsync(true)));
 
+        var code = 0;
         if (close == OpenGG.EngineCloseType.ERROR) {
             SwingUtil.showErrorAlert("BrickBench has closed abnormally. Please view the logs and report this to the developers.");
             if (splashScreen.isDisplayable()) {
@@ -313,7 +314,11 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
             }
 
             CURRENT.exit();
+            code = 1;
         }
+
+        CURRENT.window.dispose();
+        CURRENT = null;
     }
 
     public void showInitialWindow() {
@@ -726,18 +731,17 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
         }
     }
 
+    boolean exited = false;
     public void exit() {
+        if (exited) return;
         if (!showSaveProjectPrompt()) return;
 
         GGConsole.log("Writing config file on exit");
         FileTexture.FileTextureCache.haltIconLoader();
         Configuration.writeFile(Configuration.getConfigFile("editor.ini"));
-
+        
         OpenGG.endApplication();
-
-        GGConsole.log("Closing window");
-        window.dispose();
-        new Thread(() -> System.exit(0)).start();
+        exited = true;
     }
 
     public void cleanGameDirectories() {
