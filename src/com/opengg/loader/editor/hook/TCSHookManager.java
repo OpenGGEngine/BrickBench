@@ -3,7 +3,6 @@ package com.opengg.loader.editor.hook;
 import com.opengg.core.Configuration;
 import com.opengg.core.math.Vector3f;
 import com.opengg.core.util.SystemUtil;
-import com.opengg.loader.Project;
 import com.opengg.loader.BrickBench;
 import com.opengg.loader.SwingUtil;
 import com.opengg.loader.components.HookCharacterManager;
@@ -79,8 +78,7 @@ public class TCSHookManager {
                         var newMap = Path.of(currentHook.getDirectory().toString(), currentHookMap);
 
                         if (Files.exists(newMap) &&
-                                (currentMap == null || !currentMap.levelData().xmlData().path().toLowerCase().contains(currentHookMap.toLowerCase()))) {
-
+                                (currentMap == null || !currentMap.levelData().xmlData().mapFilesDirectory().toString().toLowerCase().contains(currentHookMap.toLowerCase()))) {
                             var success = BrickBench.CURRENT.loadNewProject(newMap, false);
                             if (!success) Configuration.set("autoload-hook", "false");
                             BrickBench.CURRENT.player.setPositionOffset(playerOne.pos().multiply(-1, 1, 1).add(new Vector3f(0, 0.2f, 0)));
