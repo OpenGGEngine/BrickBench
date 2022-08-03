@@ -727,19 +727,17 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
     }
 
     public void exit() {
-       // SwingUtilities.invokeLater(() -> {
-            if (!showSaveProjectPrompt()) return;
+        if (!showSaveProjectPrompt()) return;
 
-            GGConsole.log("Writing config file on exit");
-            FileTexture.FileTextureCache.haltIconLoader();
-            Configuration.writeFile(Configuration.getConfigFile("editor.ini"));
+        GGConsole.log("Writing config file on exit");
+        FileTexture.FileTextureCache.haltIconLoader();
+        Configuration.writeFile(Configuration.getConfigFile("editor.ini"));
 
-            OpenGG.endApplication();
+        OpenGG.endApplication();
 
-            GGConsole.log("Closing window");
-            window.dispose();
-            System.exit(0);
-       // });
+        GGConsole.log("Closing window");
+        window.dispose();
+        new Thread(() -> System.exit(0)).start();
     }
 
     public void cleanGameDirectories() {
