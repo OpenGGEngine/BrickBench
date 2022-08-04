@@ -319,7 +319,6 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
             code = 1;
         }
 
-        CURRENT.window.dispose();
         CURRENT = null;
         System.exit(0);
     }
