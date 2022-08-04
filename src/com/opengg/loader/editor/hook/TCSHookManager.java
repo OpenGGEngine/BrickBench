@@ -58,7 +58,7 @@ public class TCSHookManager {
     public static void update(){
         if (currentHook != null) {
             allCharacters.clear();
-            var active = currentHook.checkForValidityAndReaquirePointers();
+            var active = panel.isLIJ() ? currentHook.checkForValidityAndReaquirePointersLIJ() : currentHook.checkForValidityAndReaquirePointers();
             if (!active) {
                 currentHook.close();
                 currentHook = null;
@@ -69,7 +69,7 @@ public class TCSHookManager {
                 playerOne = new HookCharacter(currentHook.readPlayerLocation(1), 180 - currentHook.readPlayerAngle(1), 0);
                 playerTwo = new HookCharacter(currentHook.readPlayerLocation(2), 180 - currentHook.readPlayerAngle(2), 0);
 
-                allCharacters = currentHook.getAllCharacters();
+                allCharacters = panel.isLIJ() ? currentHook.getAllCharactersLIJ() : currentHook.getAllCharacters();
 
                 if (Configuration.getBoolean("autoload-hook")) {
                     var currentHookMap = currentHook.getCurrentMap();
