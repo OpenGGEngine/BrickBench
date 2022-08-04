@@ -24,10 +24,10 @@ public class RTLLoader {
             int address = data.position();
             Vector3f pos = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f rot = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
+            Vector3f tempColor = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f color = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
-            Vector3f u4 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
-            Vector3f u5 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
-
+            Vector3f flickerColor = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
+   
             //MapViewer.pointsToV(u1);
             //MapViewer.textPoints.add(Tuple.of(u1.toString(),u1));
             //Large
@@ -38,30 +38,27 @@ public class RTLLoader {
             float d2 = data.getFloat();
             float d3 = data.getFloat();
             float d4 = data.getFloat();
-            System.out.println(d1+" "+d2+" "+d3+" "+d4);
 
             var unk = data.getFloat();//data.getInt();
 
             var type = RTLLight.LightType.getLightTypeFromId((byte) data.getShort());
-            data.getShort();
-            data.getShort();
-            data.getShort();
+            var d5 = data.getShort();
+            var d6 = data.getShort();
+            var d7 = data.getShort();
 
-            data.getInt();
-                
-            data.getShort();
-            data.getShort();
+            var d8 = data.getInt();
 
-            data.getInt();
-            data.getInt();
-            data.getInt();
+            var d9 = data.getShort();
+            var d10 = data.getShort();
 
             var i1 = data.getInt();
             var multiplier = data.getFloat();
             var i2 = data.getInt();
 
+            System.out.println(d1 + " " + d2 + " " + d3 + " " + d4 + " " + d5 + " " + d6 + " " + d7 + " " + d8 + " " + d9 + " " + d10 + " " + unk + " " + i1 + " " + i2);
+
             if (type != RTLLight.LightType.INVALID)
-                mapData.rtl().lights().add(new RTLLight(pos, rot, type == RTLLight.LightType.DIRECTIONAL ? new Vector3f(1) : color, type, radius, falloff, type == RTLLight.LightType.DIRECTIONAL ? 1 : multiplier, i));
+                mapData.rtl().lights().add(new RTLLight(pos, rot, color, flickerColor, type, radius, falloff, multiplier, i));
             data.position(firstPosition + 0x8c * i);
         }
         //System.out.println("---------------------------------------------");

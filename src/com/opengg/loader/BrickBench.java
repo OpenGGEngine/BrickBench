@@ -103,7 +103,7 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
     /**
      * How many items to save in the "Recent Maps" list.
      */
-    public static final int RECENT_SAVES = 5;
+    public static final int RECENT_SAVES = 8;
 
     public static Font WORLD_OBJECT_FONT;
 

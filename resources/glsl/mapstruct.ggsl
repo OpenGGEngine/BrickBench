@@ -19,6 +19,8 @@ layout(set = 6, binding = 2) unwrap uniform LegoMaterial{
     vec4 layer0_diffuse;
     vec3 ambientColor;
 
+    vec4 specular_params;
+
     int LIGHTMAP_STAGE;
     int LIGHTING_STAGE;
 
@@ -27,6 +29,12 @@ layout(set = 6, binding = 2) unwrap uniform LegoMaterial{
 
     int SURFACE_UVSET;
     int LIGHTMAP_UVSET;
+    int SPECULAR_UVSET;
+    
+    int SPECULAR_SPECULARENABLE;
+    int REFRACTION_STAGE;
+    int REFLECTIVITY_STAGE;
+    int FRESNEL_STAGE;
 
     int SURFACE_TYPE;
 
@@ -44,6 +52,7 @@ uniform LegoLight light2;
 
 uniform sampler2D layer0_sampler;
 uniform sampler2D surface_sampler;
+uniform sampler2D specular_sampler;
 
 uniform layout(set = 6, binding = 4)sampler2D lightmap1;
 uniform layout(set = 6, binding = 5)sampler2D lightmap2;
