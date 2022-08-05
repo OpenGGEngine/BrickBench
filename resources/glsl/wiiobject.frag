@@ -185,7 +185,7 @@ float fresnelStage() {
 
 vec4 reflectivityStage() {
     if (SPECULAR_SPECULARENABLE == 1) {
-        return vec4(1);
+        return specular_specular;
     } else {
         return texture(specular_sampler, specularCoord);
     }

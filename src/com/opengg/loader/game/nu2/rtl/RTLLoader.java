@@ -55,7 +55,7 @@ public class RTLLoader {
             var multiplier = data.getFloat();
             var i2 = data.getInt();
 
-            System.out.println(d1 + " " + d2 + " " + d3 + " " + d4 + " " + d5 + " " + d6 + " " + d7 + " " + d8 + " " + d9 + " " + d10 + " " + unk + " " + i1 + " " + i2);
+            //System.out.println(d1 + " " + d2 + " " + d3 + " " + d4 + " " + d5 + " " + d6 + " " + d7 + " " + d8 + " " + d9 + " " + d10 + " " + unk + " " + i1 + " " + i2);
 
             if (type != RTLLight.LightType.INVALID)
                 mapData.rtl().lights().add(new RTLLight(pos, rot, color, flickerColor, type, radius, falloff, multiplier, i));

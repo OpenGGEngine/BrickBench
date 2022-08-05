@@ -21,6 +21,8 @@ layout(set = 6, binding = 2) unwrap uniform LegoMaterial{
 
     vec4 specular_params;
 
+    vec4 specular_specular;
+
     int LIGHTMAP_STAGE;
     int LIGHTING_STAGE;
 

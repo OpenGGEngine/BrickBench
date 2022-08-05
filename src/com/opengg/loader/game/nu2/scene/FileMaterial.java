@@ -53,7 +53,8 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
     private int alphaType = 0;
     private Vector4f color = new Vector4f(0, 0, 0, 1);
     private Vector4f specular = new Vector4f();
-
+    private Vector4f reflectivity = new Vector4f();
+    
     private Map<String, Integer> defines = new LinkedHashMap<>();
 
     boolean loadedTextures = false;
@@ -443,6 +444,8 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
 
         if (this.getSpecularTexture() != null)
             ShaderController.setUniform("specular_sampler", this.getSpecularTexture());
+        else
+            ShaderController.setUniform("specular_specular", reflectivity);
 
         ShaderController.setUniform("layer0_diffuse", this.getColor());
         ShaderController.setUniform("specular_params", specular);
@@ -526,6 +529,10 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
 
     public Vector4f getColor() {
         return color;
+    }
+
+    public void setReflectivityColor(Vector4f reflectivity) {
+        this.reflectivity = reflectivity;
     }
 
     public void setSpecular(Vector4f specular) {
@@ -617,6 +624,7 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
                         new EditorEntityProperty("Specular texture", fileSpecular, true, true, "Render/Textures/"),
                         new EditorEntityProperty("Normal texture", fileNormal, true, true, "Render/Textures/"),
                         new ColorProperty("Surface color", color.truncate()),
+                        new ColorProperty("Specular color", reflectivity.truncate()),
                         new FloatProperty("Specular exponent", specular.x, true),
                         new FloatProperty("Specular multiplier", specular.y, true),
                         new FloatProperty("Fresnel coefficient", specular.z, true),

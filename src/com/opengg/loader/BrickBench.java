@@ -14,6 +14,8 @@ import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.SystemUtils;
+
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import com.opengg.core.ConfigFile;
@@ -316,9 +318,14 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
             CURRENT.exit();
             code = 1;
         }
-
-        CURRENT = null;
-        System.exit(0);
+        
+        if (SystemUtils.IS_OS_LINUX) {
+            SwingUtilities.invokeLater(() -> {
+                CURRENT.window.dispose();
+            });
+        } else {
+            System.exit(0);
+        }
     }
 
     public void showInitialWindow() {
