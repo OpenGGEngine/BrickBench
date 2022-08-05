@@ -257,9 +257,7 @@ public class BrickBench extends GGApplication implements KeyboardListener, Mouse
 
         for (var entry : defaults.entrySet()) {
             if (Configuration.getConfigFile("editor.ini").getConfig(entry.getKey()).isEmpty()) {
-                System.out.println(entry);
                 Configuration.getConfigFile("editor.ini").writeConfig(entry.getKey(), entry.getValue());
-                System.out.println(Configuration.getConfigFile("editor.ini").getConfig(entry.getKey()));
             }
         }
 

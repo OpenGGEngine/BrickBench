@@ -255,7 +255,5 @@ void main() {
         fcolor.a = min(fcolor.a, 0.4f);
     }
 
-    fcolor.xyz = reflectivity.xyz;
-
     if(fcolor.a < alphaCutoff) discard;
 }
