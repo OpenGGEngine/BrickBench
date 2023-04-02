@@ -50,6 +50,7 @@ public class PlayerView extends ControlledComponent implements Actionable {
 
     @Override
     public void onAction(Action action) {
+        //System.out.println(action);
         if(action.type == ActionType.PRESS){
             switch (action.name) {
                 case "forward" -> control.z -= 1;

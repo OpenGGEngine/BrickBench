@@ -10,8 +10,11 @@ import com.opengg.loader.BrickBench;
 import com.opengg.loader.components.PlayerView;
 import com.opengg.loader.editor.windows.*;
 import com.opengg.loader.loading.ProjectIO;
+import org.apache.commons.io.FileUtils;
 
 import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javax.swing.*;
@@ -159,7 +162,10 @@ public class TopBar extends JMenuBar {
         var test = makeByName("test", new JMenuItem("Test Project"));
         test.addActionListener(e -> {
             if(EditorState.getProject() != null && EditorState.getProject().isProject()){
-                ProjectIO.testProject(EditorState.getProject());
+                var testDir = new Thread(() -> {
+                    ProjectIO.testProject(EditorState.getProject());
+                });
+                testDir.start();
             }else{
                 JOptionPane.showMessageDialog(BrickBench.CURRENT.window, "No project is currently open.");
             }

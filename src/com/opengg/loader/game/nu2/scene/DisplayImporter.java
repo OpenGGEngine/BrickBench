@@ -148,10 +148,21 @@ public class DisplayImporter {
 
         var matrixBuffer = ByteBuffer.allocate(16 * Float.BYTES * renderables.size());
         IntStream.range(0, renderables.size()).forEach(i -> matrixBuffer.asFloatBuffer().put(i * 16, Matrix4f.IDENTITY.getLinearArray()));
+        System.out.println("Limit: " + matrixBuffer.limit() + " | Desired: " + 16 * Float.BYTES * renderables.size());
+        int test = EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR").address();
+        System.out.println("Orig pntr address: " + Integer.toHexString(test));
+        System.out.println("Orig pntr: " + Util.getStringFromBuffer(MapWriter.readAtLocation(SCENE,test-0x10,0x20),0x20));
         var matricesStart = DisplayWriter.appendToEnd(matrixBuffer);
+        System.out.println("wawawa:" + EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("DYNO").address());
+        System.out.println("wawawa:" + EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("GSNH").address());
+        System.out.println("wawawa:" + EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR").address());
+
+        test = EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR").address();
+        System.out.println("new pntr address: " + Integer.toHexString(test));
+        System.out.println("new pntr: " + Util.getStringFromBuffer(MapWriter.readAtLocation(SCENE,test-0x10,0x20),0x20));
 
         EditorState.updateMap(MapLoader.reloadIndividualFile("gsc"));
-
+        System.out.println("weewee:" + EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR").address());
         var commands = new ArrayList<DisplayCommandResource<?>>();
         for (int i = 0; i < renderables.size(); i++) {
             commands.add(new UntypedCommandResource(matricesStart + (i * 16 * Float.BYTES), DisplayCommand.CommandType.MTXLOAD));

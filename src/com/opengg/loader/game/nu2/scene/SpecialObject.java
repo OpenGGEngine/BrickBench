@@ -6,21 +6,23 @@ import com.opengg.core.math.Vector3f;
 import com.opengg.core.physics.collision.colliders.BoundingBox;
 import com.opengg.core.render.Renderable;
 import com.opengg.core.render.shader.ShaderController;
-import com.opengg.loader.Util;
+import com.opengg.loader.*;
 import com.opengg.loader.editor.EditorState;
+import com.opengg.loader.game.nu2.NU2MapComponent;
 import com.opengg.loader.game.nu2.NU2MapData;
-import com.opengg.loader.MapEntity;
 import com.opengg.loader.loading.MapWriter;
 import com.opengg.loader.components.Selectable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public record SpecialObject(GameModel model,
                             Matrix4f initialTransform, IABLObject iablObj, int remoteIABLIndex, String name,
-                            int boundingBoxIndex, List<Float> lodCutoffs, float windSpeedFactor, float windShearFactor, int fileAddress) implements Renderable, MapEntity<SpecialObject>, Selectable {
+                            int boundingBoxIndex, List<Float> lodCutoffs, float windSpeedFactor, float windShearFactor, int fileAddress,
+                            IABLObject.RealIABLObject realIABLObject) implements Renderable, MapEntity<SpecialObject>, Selectable {
 
     @Override
     public Vector3f pos(){
@@ -103,7 +105,7 @@ public record SpecialObject(GameModel model,
 
     @Override
     public List<Property> properties() {
-        return List.of(
+        List<Property> props = new ArrayList<>(List.of(
                 new StringProperty("Name", name(), false, 128),
                 new VectorProperty("Position", pos(), true, true),
                 new VectorProperty("Scale", iablObj.transform().getScale(), false, true),
@@ -112,6 +114,13 @@ public record SpecialObject(GameModel model,
                 new FloatProperty("Wind speed factor", windSpeedFactor, true),
                 new FloatProperty("Wind shear factor", windShearFactor, true),
                 new StringProperty("LOD cutoffs", lodCutoffs.stream().map(String::valueOf).collect(Collectors.joining(", ")), false, 0)
-        );
+        ));
+        if(realIABLObject != null){
+            ((NU2MapComponent)EditorState.CURRENT.currentMap).getMapData().scene().animations().get(realIABLObject.short1()).setSpecialName(name);
+            props.add(new IntegerProperty("S1", realIABLObject().short1(), false));
+            props.add(new EditorEntityProperty("Animation", ((NU2MapComponent)EditorState.CURRENT.currentMap).getMapData().scene().animations().get(realIABLObject.short1()),false,false,"Render/Anim/"));
+            props.add(new IntegerProperty("S2", realIABLObject().short2(), false));
+        }
+        return props;
     }
 }

@@ -181,6 +181,7 @@ public class SceneFileWriter {
         boolean hasFoundBlock = false;
         var replacementBlocks = new LinkedHashMap<String, NU2MapData.SceneData.Block>();
         for(var block : EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().entrySet()){
+            System.out.println(block.getKey());
             if(block.getValue().address() > address && block.getKey().equals("NTBL")){
                 return;
             }
@@ -194,10 +195,15 @@ public class SceneFileWriter {
                 replacementBlocks.put(block.getKey(), new NU2MapData.SceneData.Block(block.getValue().address(), block.getValue().size() + size));
 
                 hasFoundBlock = true;
+                System.out.println("found:");
             }
+            /*if(block.getValue().address() > address && block.getKey().equals("GSNH")){
+                replacementBlocks.put(block.getKey(), new NU2MapData.SceneData.Block(block.getValue().address() + size, block.getValue().size()));
+            }*/
         }
-
+        System.out.println("dwingo");
         if(hasFoundBlock){
+            replacementBlocks.forEach((e,e1)-> System.out.println(e));
             EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().putAll(replacementBlocks);
         }else{
             var block = EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR");

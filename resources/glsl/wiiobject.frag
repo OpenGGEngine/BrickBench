@@ -110,17 +110,21 @@ void getLightColor(){
             }
         }else{
             if(LIGHTING_LIGHTS_COUNT > 0){
-                diffuseLight = diffuseLight + ldotn0 * pow(light0.color, vec3(gamma));
+                //diffuseLight = diffuseLight + ldotn0 * pow(light0.color, vec3(gamma));
+                diffuseLight = diffuseLight + ldotn0 * light0.color;
             }
             if(LIGHTING_LIGHTS_COUNT > 1){
-                diffuseLight = diffuseLight + ldotn1 * pow(light1.color, vec3(gamma));
+                //diffuseLight = diffuseLight + ldotn1 * pow(light1.color, vec3(gamma));
+                diffuseLight = diffuseLight + ldotn1 * light1.color;
             }
             if(LIGHTING_LIGHTS_COUNT > 2){
-                diffuseLight = diffuseLight + ldotn2 * pow(light2.color, vec3(gamma));
+                //diffuseLight = diffuseLight + ldotn2 * pow(light2.color, vec3(gamma));
+                diffuseLight = diffuseLight + ldotn2 * light2.color;
             }
 
             if (LIGHTING_STAGE != 1) {
-                diffuseLight = diffuseLight + pow(ambientColor.rgb, vec3(gamma));
+                //diffuseLight = diffuseLight + pow(ambientColor.rgb, vec3(gamma));
+                diffuseLight = diffuseLight + ambientColor.rgb;
             }
         }
         if (LIGHTING_STAGE == 5) {
@@ -162,22 +166,27 @@ vec4 getColor(){
 vec4 shadeSurface(vec4 surfaceColor, vec3 reflectivity){
     if(LIGHTMAP_STAGE != 0){
         if(PRELIGHT_FX == 1 && LIGHTMAP_STAGE == 1){
-            //float bump = dot(varying_lightDirSet.xyz, normal.xyz);
-            //float plain = dot(varying_lightDirSet.xyz, normalize(varying_normal.xyz));
-            //return vec4(surfaceColor.rgb * diffuseLight.rgb * (1 + (bump - plain)) + reflectivity, surfaceColor.a);
-            return vec4(surfaceColor.rgb * diffuseLight.rgb + reflectivity, surfaceColor.a);
+            float bump = dot(varying_lightDirSet.xyz, normal.xyz);
+            float plain = dot(varying_lightDirSet.xyz, normalize(varying_normal.xyz));
+            return vec4(surfaceColor.rgb * diffuseLight.rgb * (1 + (bump - plain)) + reflectivity, surfaceColor.a);
+            //return vec4(surfaceColor.rgb * diffuseLight.rgb + reflectivity, surfaceColor.a);
         }else{
             return vec4(surfaceColor.rgb * diffuseLight.rgb + reflectivity, surfaceColor.a);
         }
     }else if(PRELIGHT_FX == 1){
-        //float bump = dot(varying_lightDirSet.xyz, normal.xyz);
-        //float plain = dot(varying_lightDirSet.xyz, normalize(varying_normal.xyz));
-        //return vec4(surfaceColor.rgb * fs_layer0_color.bgr * (1 + (bump - plain)) + reflectivity, surfaceColor.a);
-        return vec4(surfaceColor.rgb * fs_layer0_color.bgr + reflectivity, surfaceColor.a);
+        float bump = dot(varying_lightDirSet.xyz, normal.xyz);
+        float plain = dot(varying_lightDirSet.xyz, normalize(varying_normal.xyz));
+        return vec4(surfaceColor.rgb * fs_layer0_color.bgr * (1 + (bump - plain)) + reflectivity, surfaceColor.a);
+        //return vec4(surfaceColor.rgb * fs_layer0_color.bgr + reflectivity, surfaceColor.a);
     }else if(LIGHTING_STAGE == 0){
         return surfaceColor;
     }else{
+    if(diffuseLight.r > 1 || diffuseLight.g > 1 || diffuseLight.b > 1){
+        //return vec4(1,0,0,1);
+    }
+    //return vec4(diffuseLight.rgb + reflectivity, surfaceColor.a);
         return vec4(surfaceColor.rgb * diffuseLight.rgb + reflectivity, surfaceColor.a);
+     //   return vec4(surfaceColor.rgb*max(0,dot(normal.rgb,normalize(light2.pos))),surfaceColor.a);
     }
 }
 

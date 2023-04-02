@@ -33,6 +33,7 @@ public class SplineComponent  extends EditorEntityRenderComponent {
         }
         buf.flip();
 
+
         var drawnObject = DrawnObject.create(buf);
         drawnObject.setRenderType(DrawnObject.DrawType.LINE_STRIP);
 
@@ -47,5 +48,12 @@ public class SplineComponent  extends EditorEntityRenderComponent {
             }
         });
         this.attach(new TextBillboardComponent(spline.name(), new Vector3f(spline.points().get(0))));
+
+    }
+
+    @Override
+    public void finalizeComponent() {
+        super.finalizeComponent();
+
     }
 }

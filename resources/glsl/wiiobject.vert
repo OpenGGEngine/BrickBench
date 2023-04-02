@@ -65,7 +65,7 @@ void pipeColorSet0(){
 }
 
 void pipeLightDirSet() {
-   varying_lightDirSet = view * model * lightDir;
+   varying_lightDirSet = normalize(view * model * lightDir);
 }
 
 void main() {
@@ -123,4 +123,5 @@ void main() {
     }else if(SPECULAR_UVSET == 3){
         specularCoord = vs_uv3 + uvOffset3;
     }
+    gl_PointSize = 10;
 }

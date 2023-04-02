@@ -10,6 +10,9 @@ import com.opengg.loader.game.nu2.scene.SpecialObject;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GizLoader {
 
@@ -242,9 +245,9 @@ public class GizLoader {
                     gizCount = fileData.getInt();
                     for (int i = 0; i < gizCount; i++) {
                         int nameLen = Byte.toUnsignedInt(fileData.get());
-                        byte[] nameDat = new byte[nameLen];
-                        fileData.get(nameDat);
-                        String name = new String(nameDat);
+                        //Should be null terminated
+                        String name = Util.getStringFromBuffer(fileData,nameLen);
+                        System.out.println("Minicut: " + name);
                         var str = fileData.getFloat() + "," + fileData.getFloat() + "," +
                                 fileData.getFloat() + "," + fileData.getFloat() + "," + fileData.getFloat();
                         int subBuffer = Byte.toUnsignedInt(fileData.get());
@@ -253,6 +256,7 @@ public class GizLoader {
                             byte[] nameDat2 = new byte[nameLen2];
                             fileData.get(nameDat2);
                             String name2 = new String(nameDat2);
+                            System.out.println(name2);
                             var str2 = fileData.getFloat() + "," + fileData.getFloat() + "," + fileData.getFloat() + "," + fileData.getFloat();
                             fileData.getShort();
                             fileData.getShort();
@@ -268,13 +272,16 @@ public class GizLoader {
                         gizCount = fileData.getInt();
                     }
                     int iVar9 =fileData.getInt();
+                    System.out.println("GIZMO: " + gizCount+","+iVar9);
+                    Map<String, Gizmo.BlowUpType> blowUpTypes = new HashMap<>();
                     if(version > 1){
                         for (int i = 0; i < gizCount; i++) {
                             int len = Byte.toUnsignedInt(fileData.get());
                             String name = Util.getStringFromBuffer(fileData,len);
                             len = Byte.toUnsignedInt(fileData.get());
                             //special
-                            Util.getStringFromBuffer(fileData,len);
+                            String specialObject = Util.getStringFromBuffer(fileData,len);
+                            List<String> parts = new ArrayList<>();
                             if(version < 0x11){
                                 if(version < 5){
                                     fileData.getShort();
@@ -287,16 +294,17 @@ public class GizLoader {
                                     len = Byte.toUnsignedInt(fileData.get());
                                     if(len > 0) {
                                         //par reference
-                                        Util.getStringFromBuffer(fileData, len);
+                                        parts.add(Util.getStringFromBuffer(fileData, len));
                                     }
                                 }
                             }
+                            List<String> particlesPage = new ArrayList<>();
                             if(version > 3){
                                 for (int j = 0; j < 3; j++) {
                                     len = Byte.toUnsignedInt(fileData.get());
                                     if(len > 0) {
                                         //ptl reference
-                                        Util.getStringFromBuffer(fileData, len);
+                                        particlesPage.add(Util.getStringFromBuffer(fileData, len));
                                     }
                                 }
                             }
@@ -317,22 +325,25 @@ public class GizLoader {
                                 }
                             }
                             int u514 = fileData.getInt();
+
                             if(version < 7){
 
                             }else{
                                 int studCount = fileData.getInt();
                                 int u495 = fileData.get();
+
                             }
                             if(version < 7){
 
                             }else{
                                 fileData.getFloat();
                             }
+                            String blowupDecal = "";
                             if(version> 8){
                                 len = Byte.toUnsignedInt(fileData.get());
                                 if(len > 0) {
                                     //Blowup decal
-                                    Util.getStringFromBuffer(fileData, len);
+                                    blowupDecal = Util.getStringFromBuffer(fileData, len);
                                 }
                             }
                             if(version < 0xe){
@@ -405,45 +416,51 @@ public class GizLoader {
                             if(version > 0x17){
                                 fileData.getFloat();
                             }
+                            var types = new Gizmo.BlowUpType(name,mapData.getSpecialObjectByName(specialObject).get(),parts,particlesPage,mapData.getSpecialObjectByName(blowupDecal).orElse(null));
+                            blowUpTypes.put(name,types);
 
+                            mapData.gizmo().gizmos().add(types);
                         }
                         for (int i = 0; i < iVar9; i++) {
                             int len2 = Byte.toUnsignedInt(fileData.get());
-                            //gizobstacle?
-                            Util.getStringFromBuffer(fileData, len2);
+                            String type = Util.getStringFromBuffer(fileData, len2);
+                            String name = type + "__"+i;
                             if(version >= 2){
                                 len2 = Byte.toUnsignedInt(fileData.get());
-                                Util.getStringFromBuffer(fileData, len2);
+                                name = Util.getStringFromBuffer(fileData, len2);
                             }
-                            new Vector3f(fileData.getFloat(),fileData.getFloat(),fileData.getFloat());
-                            fileData.getShort();
-                            fileData.getShort();
-                            fileData.getShort();
+                            Vector3f position = new Vector3f(fileData.getFloat(),fileData.getFloat(),fileData.getFloat());
+                            var a1 = Util.shortAngleToFloat(fileData.getShort());
+                            var a2 = Util.shortAngleToFloat(fileData.getShort());
+                            var a3 = Util.shortAngleToFloat(fileData.getShort());
+                            var studCount = 0;
                             if(version >= 2){
+                                var out = 0;
                                 if (version >= 0x14) {
                                     if(version<0x1c){
-                                        fileData.getInt();
+                                        out = fileData.getInt();
                                     }else{
                                         if(version < 0x1d){
-                                            fileData.getInt();
+                                            out = fileData.getInt();
                                             //padding
                                             fileData.getInt();
                                         }else{
-                                            fileData.getInt();
+                                            out = fileData.getInt();
                                         }
                                     }
                                 } else {
-                                    fileData.getShort();
+                                    out = fileData.getShort();
                                 }
                                 if(version > 0x1d){
                                     fileData.getInt();
                                 }
-                                fileData.getInt();
+                                studCount = fileData.getInt();
                                 fileData.get();
-                                fileData.get();
+                                var test = fileData.get();
+                                System.out.println(name+","+out+","+(out&0x8000));
                             }
                             if(version > 3){
-                                fileData.get();
+                                var test = fileData.get();
                             }
                             if(version > 5){
                                 fileData.getFloat();
@@ -469,7 +486,7 @@ public class GizLoader {
                                 fileData.getFloat();
                             }
                             if (version >= 0xc) {
-                                fileData.get();
+                                var  test = fileData.get();
                             }
                             if (version >= 0xd) {
                                 fileData.getShort();
@@ -493,6 +510,8 @@ public class GizLoader {
                             if(version > 0x1e){
                                 fileData.getFloat();
                             }
+                            mapData.gizmo().gizmos().add(
+                                    new Gizmo.BlowUp(name,blowUpTypes.get(type),position,new Vector3f(a1,a2,a3),studCount));
                         }
                     }
                 }
@@ -880,7 +899,10 @@ public class GizLoader {
                         mapData.gizmo().gizmos().add(new Gizmo.Tube(name,pos,radius,height,specialObject,address, fileData.position() - address));
                     }
                 }
-                default -> fileData.get(new byte[sectionLength]);
+                default -> {
+                    fileData.get(new byte[sectionLength]);
+                    System.out.println(typeName);
+                }
             }
 
             var sectionEnd = fileData.position();

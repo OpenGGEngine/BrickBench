@@ -767,6 +767,7 @@ public class BrickBench extends GGApplication
     public void update(float delta) {
         MapWriter.applyChangesToMapState();
         TCSHookManager.update();
+        Animator.update(delta);
         DiscordManager.update();
 
         if (EditorState.CURRENT.shouldRunAnimations) {

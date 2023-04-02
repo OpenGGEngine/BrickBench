@@ -6,6 +6,7 @@ import com.opengg.loader.editor.EditorState;
 import com.opengg.loader.editor.windows.ProjectCreationDialog;
 
 import javax.swing.*;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -144,5 +145,17 @@ public final class MapWriter {
         WritableObject(String extension){
             this.usedExtension = extension;
         }
+    }
+    private static void dump(ByteBuffer b,String loc){
+        int position = b.position();
+        b.rewind();
+        try(FileChannel fc = new FileOutputStream(loc).getChannel()){
+            while(fc.write(b) != 0){
+
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        b.position(position);
     }
 }

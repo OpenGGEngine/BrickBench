@@ -27,15 +27,15 @@ open module com.opengg.loader {
 
     requires com.github.benmanes.caffeine;
 
-    requires miglayout.core;
-    requires miglayout.swing;
+    requires com.miglayout.core;
+    requires com.miglayout.swing;
 
     requires vcdiff.core;
     requires discord.rpc;
 
     requires net.sourceforge.argparse4j;
     requires jnrepl;
-    requires reflections;
+    requires org.reflections;
 
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.module.paramnames;

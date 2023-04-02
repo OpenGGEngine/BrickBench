@@ -17,6 +17,7 @@ import java.util.List;
 
 public class GameSceneHeaderBlock extends DefaultFileBlock{
     public void readFromFile(ByteBuffer fileBuffer, long blockLength, int blockID, int blockOffset, NU2MapData mapData) throws IOException {
+        System.out.println("gsnh");
         super.readFromFile(fileBuffer, blockLength, blockID, blockOffset, mapData);
 
         int texIndexList = readPointer();
@@ -59,13 +60,14 @@ public class GameSceneHeaderBlock extends DefaultFileBlock{
         mapData.scene().gscRenderableEndFromGSNH().set(listEndAddr - blockOffset);
         mapData.scene().gscRenderableListFromGSNH().set(gscRenderableList - blockOffset);
         mapData.scene().gscRenderableListLen().set(gscRenderableAmount);
-
+        System.out.println("textures");
         if(MapLoader.CURRENT_GAME_VERSION == Project.GameVersion.LIJ1 || MapLoader.CURRENT_GAME_VERSION == Project.GameVersion.LB1){
             loadLIJTextures(texCount, texMetaPtr);
         } else {
             loadTCSTextures(texCount, texMetaPtr);
         }
 
+        System.out.println("vbstart");
         int vertexBufferCount = fileBuffer.getShort();
         for(int i = 0; i < vertexBufferCount; i++){
             int bufAddr = fileBuffer.position();
@@ -83,6 +85,7 @@ public class GameSceneHeaderBlock extends DefaultFileBlock{
             fileBuffer.get(data);
             mapData.scene().gscIndexBuffers().add(new GameBuffer(data, bufAddr, bufSize));
         }
+        System.out.println("gsnhend");
     }
 
     public void loadLIJTextures(int texCount, int texMetaPtr) {
@@ -154,7 +157,7 @@ public class GameSceneHeaderBlock extends DefaultFileBlock{
         };
 
         String name = mapData.xmlData().loadedTextures().getOrDefault("Texture_" + descriptor.trueIndex(), "Texture_" + descriptor.trueIndex());
-
+        System.out.println(descriptor.toString());
         ByteBuffer image = Allocator.alloc(descriptor.size()).put(fileBuffer.slice(fileBuffer.position(),descriptor.size())).flip();
         fileBuffer.position(fileBuffer.position()+descriptor.size());
         var texture = new FileTexture(name, image, textureStart, fileBuffer.position(), descriptor);

@@ -70,6 +70,7 @@ public class MapLoader {
                     mapData = mapData.loadFile(file);
                 } catch (FileLoadException exception) {
                     GGConsole.error("Failed to load " + file.fileName + ": " + exception.getMessage());
+                    exception.printStackTrace();
                 }
             }
 

@@ -128,10 +128,15 @@ public class DisplayWriter {
             pointerBuf.putInt(newAddresses.get(i) - currentAddr);
             SceneFileWriter.addPointer(currentAddr);
         }
+        int test = EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR").address();
+        System.out.println("pre pntr: " + Util.getStringFromBuffer(MapWriter.readAtLocation(SCENE,test-0x10,0x20),0x20));
 
         MapWriter.applyPatch(SCENE, gscListEndAddr, pointerBuf);
+        test = EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR").address();
+        System.out.println("pre pntr2: " + Util.getStringFromBuffer(MapWriter.readAtLocation(SCENE,test-0x10,0x20),0x20));
         MapWriter.applyPatch(SCENE, gscListLenAddr, Util.littleEndian(gscListLen + renderables.size()));
-
+        test = EditorState.getActiveMap().levelData().<NU2MapData>as().scene().blocks().get("PNTR").address();
+        System.out.println("pre pntr3: " + Util.getStringFromBuffer(MapWriter.readAtLocation(SCENE,test-0x10,0x20),0x20));
         return newAddresses;
     }
 
