@@ -28,6 +28,9 @@ public class Util {
     public static float shortAngleToFloat(short angle){
         return angle * 360f / 2 / Short.MAX_VALUE;
     }
+    public static float shortAngleToFloat2(short angle){
+        return (float)Short.toUnsignedInt(angle) / (0xFFFF)*2*3.1415926535f;
+    }
 
     /**
      * Convert a float to a short angle.

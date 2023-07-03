@@ -397,6 +397,100 @@ public sealed interface Gizmo extends MapEntity<Gizmo>, Selectable  {
             return new BoundingBox(pos.subtract(new Vector3f(radius/2, 0, radius/2)), pos.add(new Vector3f(radius/2, height, radius/2)));
         }
     }
+    public record BlowUpType(String name,SpecialObject object ,List<String> parts,List<String>particlesPage,SpecialObject blowupDecal) implements Gizmo {
+
+        @Override
+        public String path() {
+            return "Gizmo/BlowUps/BlowUpTypes/" + name();
+        }
+
+        @Override
+        public List<Property> properties() {
+            List<Property> partProps = parts.stream().map(e->new StringProperty("Part Prop",e,false,-1)).collect(Collectors.toList());
+            List<Property> particleProps = particlesPage.stream().map(e->new StringProperty("Particle Prop",e,false,-1)).collect(Collectors.toList());
+
+            return List.of(new StringProperty("Name",name,false,-1),
+                    new EditorEntityProperty("Object",object,true,false,"Render/SpecialObjects/"),
+                    new EditorEntityProperty("Blowup Decal",blowupDecal,true,false,"Render/SpecialObjects/"),
+                    new ListProperty("Parts",partProps,false),
+                    new ListProperty("Particles",particleProps,false));
+        }
+
+        @Override
+        public BoundingBox getBoundingBox() {
+            return null;
+        }
+
+        @Override
+        public int fileAddress() {
+            return 0;
+        }
+
+        @Override
+        public int fileLength() {
+            return 0;
+        }
+    }
+    public record BlowUp(String name,BlowUpType type ,Vector3f pos,Vector3f angle,int studCount) implements Gizmo{
+
+        @Override
+        public String path() {
+            return "Gizmo/BlowUps/BlowUps/" + name();
+        }
+
+        @Override
+        public List<Property> properties() {
+            return List.of(new StringProperty("Name",name,false,-1),
+                    new VectorProperty("Position",pos, true,false),
+                    new VectorProperty("Rotation",angle, false,false),
+                    new EditorEntityProperty("BlowUpType",type,true,false,"Gizmo/BlowUps/BlowUpTypes"));
+        }
+
+        @Override
+        public BoundingBox getBoundingBox() {
+            return null;
+        }
+
+        @Override
+        public int fileAddress() {
+            return 0;
+        }
+
+        @Override
+        public int fileLength() {
+            return 0;
+        }
+    }
+
+    record Forcible(String name, Vector3f pos, List<SpecialObject> specialObjects) implements Gizmo{
+
+        @Override
+        public String path() {
+            return "Gizmo/Forces/" + name;
+        }
+
+        @Override
+        public List<Property> properties() {
+            return List.of(new StringProperty("Name", name(), true, 16),
+                            new VectorProperty("Position", pos(), true,true));
+        }
+
+        @Override
+        public BoundingBox getBoundingBox() {
+            return null;
+        }
+
+        @Override
+        public int fileAddress() {
+            return 0;
+        }
+
+        @Override
+        public int fileLength() {
+            return 0;
+        }
+    }
+
     record HatMachine(int nameLength, String name, Vector3f pos, float angle, HatType type, StudColor studColor, Visibility floorVisibility, Vector3f activationPos, float activationRange, int fileAddress, int fileLength) implements Gizmo{
 
         @Override

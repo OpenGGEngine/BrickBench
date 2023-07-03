@@ -6,6 +6,7 @@ import com.opengg.core.math.Vector2f;
 import com.opengg.core.math.Vector3f;
 import com.opengg.core.math.Vector4f;
 import com.opengg.core.render.internal.opengl.OpenGLRenderer;
+import com.opengg.core.render.internal.opengl.texture.OpenGLTexture;
 import com.opengg.core.render.shader.ShaderController;
 import com.opengg.core.render.shader.VertexArrayBinding;
 import com.opengg.core.render.shader.VertexArrayFormat;
@@ -32,6 +33,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.opengg.core.render.internal.opengl.texture.OpenGLTexture.getOpenGlWrapType;
+
 public class FileMaterial implements DisplayCommandResource<FileMaterial> {
     public static FileMaterial currentMaterial;
     public static boolean ENABLE_DEPTH_EMULATION = true;
@@ -56,6 +59,9 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
     private Vector4f color = new Vector4f(0, 0, 0, 1);
     private Vector4f specular = new Vector4f();
     private Vector4f reflectivity = new Vector4f();
+    private Vector4f layerOpacities = new Vector4f();
+
+    public Vector4f[] layerDiffuse = new Vector4f[4];
     
     private Map<String, Integer> defines = new LinkedHashMap<>();
 
@@ -76,6 +82,9 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
         new UVAnimationProperties(0), new UVAnimationProperties(1), new UVAnimationProperties(2), new UVAnimationProperties(3)
     };
     private float sineTime = 0;
+
+    public Texture.WrapType uWrap;
+    public Texture.WrapType vWrap;
 
     public FileMaterial(int fileAddress) {
         this.fileAddress = fileAddress;
@@ -454,8 +463,12 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
     public void apply() {
         applyDepthAlphaFormat();
         FileMaterial.currentMaterial = this;
-        if (this.getTexture() != null)
-            ShaderController.setUniform("layer0_sampler", this.getTexture());
+        if (this.getTexture() != null) {
+            OpenGLTexture tex = (OpenGLTexture) this.getTexture();
+            tex.setTextureWrapType(getOpenGlWrapType(uWrap),getOpenGlWrapType(vWrap),getOpenGlWrapType(Texture.WrapType.REPEAT));
+            ShaderController.setUniform("layer0_sampler", tex);
+        }
+        ShaderController.setUniform("layerOpacities",layerOpacities);
 
         if (this.getLayer1Texture() != null)
             ShaderController.setUniform("layer1_sampler", this.getLayer1Texture());
@@ -468,7 +481,10 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
         else
             ShaderController.setUniform("specular_specular", reflectivity);
 
-        ShaderController.setUniform("layer0_diffuse", this.getColor());
+        ShaderController.setUniform("layer0_diffuse", layerDiffuse[0]);
+        ShaderController.setUniform("layer1_diffuse", layerDiffuse[1]);
+        ShaderController.setUniform("layer2_diffuse", layerDiffuse[2]);
+        ShaderController.setUniform("layer3_diffuse", layerDiffuse[3]);
         ShaderController.setUniform("specular_params", specular);
         for (var define : this.getDefines().entrySet()) {
             ShaderController.setUniform(define.getKey(), define.getValue());
@@ -715,7 +731,11 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
                         new FloatProperty("Specular exponent", specular.x, true),
                         new FloatProperty("Fresnel multiplier", specular.z, true),
                         new FloatProperty("Fresnel exponent", specular.w, true),
-                        new FloatProperty("Transparency", color.w, false)
+                        new FloatProperty("Transparency", color.w, false),
+                        new ColorProperty("Diffuse 0",layerDiffuse[0].truncate()),
+                        new ColorProperty("Diffuse 1",layerDiffuse[1].truncate()),
+                        new ColorProperty("Diffuse 2",layerDiffuse[2].truncate()),
+                        new ColorProperty("Diffuse 3",layerDiffuse[3].truncate())
                 )),
                 new GroupProperty("Animation", animationProperties),
                 new GroupProperty("Vertex Definition",
@@ -853,5 +873,13 @@ public class FileMaterial implements DisplayCommandResource<FileMaterial> {
     public static Vector4f getColor(int hash){
         Random random = new Random(hash);
         return new Vector4f(random.nextFloat(),random.nextFloat(),random.nextFloat(),1);
+    }
+
+    public Vector4f getLayerOpacities() {
+        return layerOpacities;
+    }
+
+    public void setLayerOpacities(Vector4f layerOpacities) {
+        this.layerOpacities = layerOpacities;
     }
 }

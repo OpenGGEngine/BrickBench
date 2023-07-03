@@ -1,10 +1,11 @@
-:wpackage com.opengg.loader.game.nu2.scene;
+package com.opengg.loader.game.nu2.scene;
 
 import com.opengg.core.math.Vector3f;
 import com.opengg.core.world.WorldEngine;
 import com.opengg.loader.EditorEntity;
 import com.opengg.loader.MapEntity;
 import com.opengg.loader.Animator;
+import com.opengg.loader.game.nu2.scene.SpecialObjectComponent;
 
 import javax.swing.*;
 import java.util.ArrayList;

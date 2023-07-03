@@ -181,7 +181,7 @@ public class AI2Loader{
             });*/
 
             //DEBUGGG__________________________--
-            for (int j = 0; j < cnxCount; j++) {
+           /* for (int j = 0; j < cnxCount; j++) {
                 var connection = path.connections().get(j);
                 Vector3f point1 =  path.pathPoints().get(connection.aNode()).pos().multiply(-1,1,1);
                 Vector3f point2 =  path.pathPoints().get(connection.bNode()).pos().multiply(-1,1,1);
@@ -189,7 +189,7 @@ public class AI2Loader{
                 var difference = Util.floatMod(Util.shortAngleToFloat((short) connection.perpendicularAngle()) - Math.toDegrees(Math.atan2(point1.z - point2.z,point1.x - point2.x)),360);
                 var xzdistance = Math.sqrt(Math.pow(point2.x-point1.x,2)+Math.pow(point2.z-point1.z,2));
                 System.out.println(point1.distanceTo(point2) + "," + xzdistance + "," + difference + "," + path.pathPoints().get(connection.aNode()).xzSize() + "," + path.pathPoints().get(connection.bNode()).xzSize());
-            }
+            }*/
             //END DEBUGGGGGGGGGGGGGGGGG
 
             byte[][] defaultConnectionTable = new byte[numPathPoints][numPathPoints];

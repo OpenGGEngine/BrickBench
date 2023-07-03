@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public record AIPath(String name,List<AIPathConnection> connections, List<AIPathPoint> pathPoints) implements MapEntity<AIPath> {
+public record AIPath(String name,List<AIPathConnection> connections, List<AIPathPoint> pathPoints, List<AIRoute> routes) implements MapEntity<AIPath> {
 
     @Override
     public String path() {
@@ -21,7 +21,7 @@ public record AIPath(String name,List<AIPathConnection> connections, List<AIPath
         return List.of(new EditorEntity.StringProperty("Name",name(), true, 16));
     }
 
-    public static record AIPathPoint(AIPath parentPath,String name, Vector3f pos, int index, float xzSize, float minY, float maxY, List<AIPathConnection> connections, String specialObject, Vector3f specialObjectPos) implements MapEntity<AIPathPoint> {
+    public record AIPathPoint(AIPath parentPath,String name, Vector3f pos, int index, float xzSize, float minY, float maxY, List<AIPathConnection> connections, String specialObject, Vector3f specialObjectPos, int routeIDBitfield, int exitNodeRoutIDBitfield) implements MapEntity<AIPathPoint> {
         @Override
         public String name(){
             return name.isEmpty() ? "PathPoint" + index : name;
@@ -56,12 +56,12 @@ public record AIPath(String name,List<AIPathConnection> connections, List<AIPath
             Map.entry(0x400,"Jump Now"),Map.entry(0x800,"Don't Jump Now"),Map.entry(0x40000,"Blockage"),
             Map.entry(0x1,"Jump"),Map.entry(0x80000,"Don't Toggle"));
 
-    public static record AIPathConnection(int to, int from, int toCNXFlags, int fromCNXFlags, int unk1, int unk2,
+    public static record AIPathConnection(AIPath paths,int aNode, int bNode, int toCNXFlags, int fromCNXFlags, int unk1, int unk2,
                                           float a, float b) implements MapEntity<AIPathConnection>{
 
         @Override
         public String name() {
-            return to + " to " + from;
+            return aNode + " to " + bNode;
         }
 
         @Override
@@ -73,5 +73,12 @@ public record AIPath(String name,List<AIPathConnection> connections, List<AIPath
         public List<Property> properties() {
             return List.of(new StringProperty("Name",name(), false, 16));
         }
+    }
+
+    public record AIRoute(AIPath path, String routeName, int routeID, byte[] pathPoints,byte[][]  routingTable,byte[] enterExitNodes,List<String> characters){
+            public AIRoute(AIPath path,byte[][] routeTable){
+                this(path,"Default Route",0,null,routeTable,null,null);
+            }
+
     }
 }

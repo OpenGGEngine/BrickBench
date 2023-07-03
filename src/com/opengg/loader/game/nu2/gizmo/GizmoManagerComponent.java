@@ -12,13 +12,16 @@ import com.opengg.core.render.objects.RenderableGroup;
 import com.opengg.core.render.objects.TextureRenderable;
 import com.opengg.core.render.texture.Texture;
 import com.opengg.core.world.components.Component;
+import com.opengg.core.world.components.RenderComponent;
 import com.opengg.loader.BrickBench;
+import com.opengg.loader.MatrixUtils;
 import com.opengg.loader.components.EditorEntityRenderComponent;
 import com.opengg.loader.components.BillBoardRenderable;
 import com.opengg.loader.components.NativeCache;
 
 import java.awt.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GizmoManagerComponent extends Component {
     public void addGizmo(Gizmo gizmo){
@@ -123,23 +126,23 @@ public class GizmoManagerComponent extends Component {
                     new EditorEntityRenderComponent(lever, renderable, new SceneRenderUnit.UnitProperties().shaderPipeline(shader))
                             .setPositionOffset(lever.pos())
                             .setRotationOffset(Quaternionf.createXYZ(new Vector3f(0, lever.angle(), 0))));
-        }else if (gizmo instanceof Gizmo.HatMachine hat){
+        }else if (gizmo instanceof Gizmo.HatMachine hat) {
             Renderable renderable;
-            if(BrickBench.CURRENT.getNU2Things() == null){
+            if (BrickBench.CURRENT.getNU2Things() == null) {
                 renderable = new TextureRenderable(
                         ObjectCreator.createQuadPrism(new Vector3f(0f, -0.25f, 0f), new Vector3f(0.2f, 0.2f, 0.2f)), Texture.ofColor(Color.ORANGE));
-            }else {
-                var hatName = switch (hat.type()){
+            } else {
+                var hatName = switch (hat.type()) {
                     case BOUNTY_HUNTER -> "bountyHelmet";
                     case STORMTROOPER -> "stormTrooperHelmet";
                     case FEDORA -> "hat_3";
-                    case LEIA ->  "hat_1";
+                    case LEIA -> "hat_1";
                     case TOP_HAT -> "hat_4";
                     case BASEBALL_CAP -> "hat_5";
                     case DROID_PANEL -> "R2_base";
                     case RANDOM -> "info";
                 };
-                var colorName = switch (hat.studColor()){
+                var colorName = switch (hat.studColor()) {
                     case YELLOW -> "lever_nob1";
                     case ORANGE -> "lever_nob2";
                     case RED -> "lever_nob3";
@@ -165,6 +168,31 @@ public class GizmoManagerComponent extends Component {
                     new EditorEntityRenderComponent(hat, renderable, new SceneRenderUnit.UnitProperties().shaderPipeline(shader))
                             .setPositionOffset(hat.pos())
                             .setRotationOffset(Quaternionf.createXYZ(new Vector3f(0, hat.angle(), 0))));
+        }else if(gizmo instanceof Gizmo.BlowUp gizBlowUp){
+            var special = gizBlowUp.type().object().model();
+            var component = new EditorEntityRenderComponent(gizBlowUp,special,new SceneRenderUnit.UnitProperties().shaderPipeline("ttNormal"));
+            var matrix = gizBlowUp.type().object().iablObj().transform();
+            matrix = new Matrix4f(matrix.m00,matrix.m01, matrix.m02, matrix.m03,
+                    matrix.m10,matrix.m11, matrix.m12, matrix.m13,
+                    matrix.m20,matrix.m21, matrix.m22, matrix.m23,
+                    0,0,0, matrix.m33);
+            matrix = MatrixUtils.rotateY(matrix,gizBlowUp.angle().y);
+            matrix = MatrixUtils.preRotateX(matrix,gizBlowUp.angle().x);
+            matrix = MatrixUtils.preRotateY(matrix,gizBlowUp.angle().z);
+            matrix = matrix.translate(gizBlowUp.pos());
+            component.setOverrideMatrix(matrix);
+            this.attach(component);
+        }else if(gizmo instanceof Gizmo.Forcible gizForce) {
+            /*RenderableGroup group = new RenderableGroup(gizForce.specialObjects().stream().map(e->{
+                        var comp = new RenderComponent(new SceneRenderUnit.UnitProperties());
+                        comp.setRenderable(e.model());
+                        comp.setOverrideMatrix(e.initialTransform());
+                        return comp;
+            }
+            ).collect(Collectors.toList()));
+            var component = new EditorEntityRenderComponent(gizForce,group,new SceneRenderUnit.UnitProperties().shaderPipeline("ttNormal"));
+            this.attach(component);*/
+            this.attach(new EditorEntityRenderComponent(gizForce,new TextureRenderable(ObjectCreator.createCube(1),Texture.ofColor(Color.GREEN)),new SceneRenderUnit.UnitProperties()));
         }else if(gizmo instanceof Gizmo.Tube gizTube){
             var renderable = new MatrixRenderable(
                 new TextureRenderable(

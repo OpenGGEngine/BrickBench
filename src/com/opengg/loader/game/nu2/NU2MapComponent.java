@@ -4,6 +4,7 @@ import com.opengg.core.render.SceneRenderUnit;
 import com.opengg.core.world.components.RenderComponent;
 import com.opengg.core.world.components.WorldObject;
 import com.opengg.loader.components.EditorEntityRenderComponent;
+import com.opengg.loader.game.nu2.ai.AIPathPointComponent;
 import com.opengg.loader.game.nu2.ai.LocatorComponent;
 import com.opengg.loader.components.MapComponent;
 import com.opengg.loader.editor.EditorState;
@@ -36,6 +37,7 @@ public class NU2MapComponent extends MapComponent<NU2MapData> {
     private final WorldObject staticMesh = new WorldObject("staticMesh");
     private final WorldObject rtlLights = new WorldObject("rtlLights");
     private final WorldObject skybox = new WorldObject("skybox");
+    private final WorldObject paths = new WorldObject("paths");
 
     private NU2MapData mapData;
     public static List<byte[]> connections = new ArrayList<>();
@@ -48,7 +50,7 @@ public class NU2MapComponent extends MapComponent<NU2MapData> {
 
         this.attach(terrainGroups).attach(walls).attach(triggers).attach(portalSet).attach(doors)
                 .attach(gizmos).attach(splines).attach(specialObjects).attach(aiLocators)
-                .attach(aiSpawn).attach(staticMesh).attach(rtlLights).attach(skybox);
+                .attach(aiSpawn).attach(staticMesh).attach(rtlLights).attach(skybox).attach(paths);
 
         updateSceneFile();
         updateTextData();
@@ -78,10 +80,12 @@ public class NU2MapComponent extends MapComponent<NU2MapData> {
         aiSpawn.removeAll();
         triggers.removeAll();
         aiLocators.removeAll();
+        paths.removeAll();
 
         mapData.ai().creatureSpawns().forEach(creature -> aiSpawn.attach(new CreatureSpawnComponent(creature)));
         mapData.ai().triggers().forEach(trigger -> triggers.attach(new WorldTriggerComponent(trigger)));
         mapData.ai().aiLocators().forEach(locator -> aiLocators.attach(new LocatorComponent(locator)));
+        mapData.ai().paths().forEach(e-> e.pathPoints().forEach(e2->paths.attach(new AIPathPointComponent(e2))));
     }
     public void updateRTLData(){
         rtlLights.removeAll();

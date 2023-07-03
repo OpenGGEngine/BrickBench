@@ -51,11 +51,15 @@ public record SpecialObject(GameModel model,
 
     @Override
     public BoundingBox getBoundingBox() {
-        return new BoundingBox(
+        var bounds =  ((NU2MapData) EditorState.getActiveMap().levelData()).scene().boundingBoxes().get(boundingBoxIndex());
+        var bbCenter = bounds.position();
+        return new BoundingBox(bbCenter.subtract(bounds.size())
+                ,bbCenter.add(bounds.size()));
+        /*return new BoundingBox(i
                 ((NU2MapData) EditorState.getActiveMap().levelData()).scene().boundingBoxes().get(boundingBoxIndex()).position(),
                 iablObj.bounds().size().inverse(),
                 iablObj.bounds().size()
-        );
+        );*/
     }
 
     @Override

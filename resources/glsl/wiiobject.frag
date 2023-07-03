@@ -133,6 +133,21 @@ void getLightColor(){
     }
 }
 
+vec4 combine(int operation, vec4 src,vec4 dst){
+    if(operation == 1){
+        //return vec4(src.a,dst.a,0,1);
+        return vec4(dst.rgb * (1.0-src.a) + src.rgb * src.a,1.0-((1.0-dst.a) * (1.0 - src.a)));
+    }else if(operation == 2){
+        return vec4(dst.rgb + src.rgb * src.a,dst.a);
+    }else if(operation == 3){
+        return vec4(dst.rgb - src.rgb * src.a,dst.a);
+    }else if(operation == 4){
+        return vec4(dst.rgb * (src.rgb * src.a + vec3(1.0-src.a, 1.0-src.a, 1.0-src.a)), dst.a);
+    }else{
+        return dst;
+    }
+}
+
 vec4 getColor(){
     vec4 baseColor = vec4(1);
 
@@ -154,11 +169,27 @@ vec4 getColor(){
             }else{
                 surfaceColor = baseColor * vec4(pow(layer0_diffuse.rgb, vec3(gamma)), 1);
             }
+            surfaceColor.a *= layerOpacities.r;
         }else{
             vec4 samplerColor = texture(layer0_sampler, uv0);
             surfaceColor = samplerColor * baseColor;
+            surfaceColor.a *= (fs_layer0_color.a * layerOpacities.r);
         }
    // }
+    vec4 layer1Color = vec4(0);
+   if (COMBINE_OP_1 == 1){
+        if(LAYER1_DIFFUSEENABLE == 1){
+            layer1Color = vec4(pow(layer1_diffuse.rgb, vec3(gamma)), layer1_diffuse.a);
+        }else{
+            layer1Color = texture(layer1_sampler, uv0);
+            layer1Color.a *= layer1_diffuse.a;
+        }
+        layer1Color.rgb *= baseColor.rgb;
+        layer1Color.a   *= (layerOpacities.g);
+        //surfaceColor += layer1Color;
+        surfaceColor = combine(COMBINE_OP_1, layer1Color, surfaceColor);
+        //surfaceColor = layer1Color;
+   }
 
     return surfaceColor;
 }
@@ -260,6 +291,10 @@ void main() {
     vec4 shadedSurface = shadeSurface(surfaceColor, specularLight * reflectivity.rgb);
 
     fcolor = shadedSurface;
+    //fcolor = texture(surface_sampler, normalCoord);
+
+    //fcolor = vec4(lightmapCoord,0,1);
+
     if(muteColors != 0){
         float luminance = dot(fcolor.rgb, vec3(0.2125, 0.7154, 0.0721));
         fcolor.rgb = vec3(luminance, luminance, luminance) * 0.4f;

@@ -24,6 +24,10 @@ public interface EditorIcons {
     FlatSVGIcon light = loadIcons("light.svg",buttonRowIconSize,buttonRowIconSize);
     FlatSVGIcon messages = loadIcons("text.svg",buttonRowIconSize,buttonRowIconSize);
     FlatSVGIcon highlight = loadIcons("highlight.svg",buttonRowIconSize,buttonRowIconSize);
+    FlatSVGIcon leftArrow = loadIcons("leftarrow.svg",(int)(buttonRowIconSize*0.80),(int)(buttonRowIconSize*0.60));
+    FlatSVGIcon rightArrow = loadIcons("rightarrow.svg",(int)(buttonRowIconSize*0.80),(int)(buttonRowIconSize*0.60));
+    //FlatSVGIcon video = loadIcons("video.svg",20,20);
+    FlatSVGIcon video = loadIcons("playbutton.svg",buttonRowIconSize,buttonRowIconSize);
 
     //Object Tree Icons
     int treeIconSize = 20;
@@ -41,13 +45,13 @@ public interface EditorIcons {
     FlatSVGIcon staticmesh = loadIcons("staticmesh.svg",treeIconSize,treeIconSize);
     FlatSVGIcon triggers = loadIcons("trigger2.svg",treeIconSize,treeIconSize);
     FlatSVGIcon render = loadIcons("render.svg",treeIconSize,treeIconSize);
+    FlatSVGIcon lights = loadIcons("lightbulb.svg",treeIconSize,treeIconSize);
     FlatSVGIcon trash = loadIcons("trash.svg",20,20);
 
     //Project Tree Icons
     FlatSVGIcon areas = loadIcons("areas.svg",treeIconSize,treeIconSize);
     FlatSVGIcon maps = loadIcons("maps.svg",treeIconSize,treeIconSize);
 
-    FlatSVGIcon video = loadIcons("video.svg",treeIconSize,treeIconSize);
 
     /**
      * Load the icon with the given name.
@@ -92,6 +96,7 @@ public interface EditorIcons {
             Map.entry("SpecialObjects", EditorIcons.specialobject),
             Map.entry("StaticObjects", EditorIcons.staticmesh),
             Map.entry("DisplayLists", EditorIcons.staticmesh),
+            Map.entry("Lights", EditorIcons.lights),
             Map.entry("Triggers", EditorIcons.triggers),
             Map.entry("Render", EditorIcons.render),
             Map.entry("Maps", maps),

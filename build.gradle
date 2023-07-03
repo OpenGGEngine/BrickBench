@@ -20,7 +20,7 @@ group 'com.opengg'
 version '0.3.4'
 
 project.ext.javaVersion = 1.20
-project.ext.lwjglVersion = "3.3.2"
+project.ext.lwjglVersion = "3.3.3-SNAPSHOT"
 
 if (Os.isFamily(Os.FAMILY_WINDOWS)) {
     project.ext.lwjglNatives = "natives-windows"

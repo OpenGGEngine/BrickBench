@@ -14,8 +14,8 @@ class ButtonRow extends JToolBar {
         super(JToolBar.HORIZONTAL);
         this.setFloatable(false);
 
-        var nextButton = new JButton(">");
-        var previousButton = new JButton("<");
+        var nextButton = new JButton(EditorIcons.rightArrow);
+        var previousButton = new JButton(EditorIcons.leftArrow);
 
         nextButton.addActionListener(a -> EditorState.redoSelection());
         previousButton.addActionListener(a -> EditorState.undoSelection());

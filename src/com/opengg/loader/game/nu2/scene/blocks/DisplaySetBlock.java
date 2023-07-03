@@ -211,9 +211,12 @@ public class DisplaySetBlock extends DefaultFileBlock {
             var displayObject = mapData.scene().gameModels().stream().filter(m -> m.modelAddress() == modelAddress).findFirst().get();
             var name = NameTableFileBlock.CURRENT.getByOffsetFromStart(stringAddr);
             var lods = getLODLevels(lodPtr);
-
+            IABLObject.RealIABLObject obj = null;
+            if(remoteIablAddress > 0){
+                obj = get3ALA(fileBuffer,remoteIablAddress);
+            }
             var specObj = new SpecialObject(displayObject, initialMatrix, localIABL, remoteIablAddress,
-                    name, boundingBoxIndex, lods, windSpeedFactor / 65535.0f, windShearFactor / 65535.0f, thisSpecObj);
+                    name, boundingBoxIndex, lods, windSpeedFactor / 65535.0f, windShearFactor / 65535.0f, thisSpecObj,obj);
             objs.add(specObj);
         }
         return objs;
@@ -245,7 +248,7 @@ public class DisplaySetBlock extends DefaultFileBlock {
         return new IABLObject(localIablMatrix, new IABLObject.IABLBoundingBox(boundsPos, boundsSize, addr + 16 * 4), addr);
     }
 
-    public int get3ALA(ByteBuffer source, int position) {
+    public IABLObject.RealIABLObject get3ALA(ByteBuffer source, int position) {
         int oldPos = source.position();
         source.position(position);
         var localIablMatrix =  BufferUtil.readMatrix4f(source);
@@ -254,7 +257,7 @@ public class DisplaySetBlock extends DefaultFileBlock {
         var boundsSize = new Vector3f(source.getFloat(), source.getFloat(), source.getFloat());
         int ret = source.getShort();
         source.position(oldPos);
-        return ret;
+        return null;
     }
 
     private void parseGameModels(int gameModelPos, int gameModelCount) {

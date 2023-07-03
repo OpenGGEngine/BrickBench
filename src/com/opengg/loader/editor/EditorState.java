@@ -225,6 +225,11 @@ public class EditorState {
         CURRENT.namespaces.remove(map.name());
         CURRENT.savedPlayerPositions.put(map.name(),
                 new Tuple.OrderedTuple<>(BrickBench.CURRENT.ingamePosition, BrickBench.CURRENT.player.getRotation()));
+
+        System.out.println("Trying to delete: " +  map.name());
+        System.out.println("Loaded sets:");
+        System.out.println(CURRENT.loadedMaps.keySet().toString());
+        System.out.println("About to remove");
         var instance = CURRENT.loadedMaps.remove(map.name());
         
         if (instance != null) {

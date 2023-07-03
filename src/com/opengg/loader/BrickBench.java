@@ -63,6 +63,7 @@ import com.opengg.loader.game.nu2.scene.FileTexture;
 import com.opengg.loader.editor.hook.JNativeHookLibraryLocator;
 import com.opengg.loader.loading.MapLoader;
 import com.opengg.loader.loading.MapWriter;
+import org.lwjgl.system.APIUtil;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -103,7 +104,7 @@ public class BrickBench extends GGApplication
     /**
      * Whether or not to add a pause at the start of the load.
      */
-    public static final boolean RENDERDOC_PAUSE = false;
+    public static final boolean RENDERDOC_PAUSE = true;
 
     /**
      * How many items to save in the "Recent Maps" list.
@@ -194,7 +195,6 @@ public class BrickBench extends GGApplication
 
     public static void main(String... args) throws UnsupportedLookAndFeelException, InterruptedException, IOException {
         GGConsole.initialize();
-
         var parser = ArgumentParsers.newFor("BrickBench").addHelp(true)
                 .build()
                 .description("Map editor for Lego Star Wars")

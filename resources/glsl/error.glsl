@@ -1,7 +1,8 @@
-COMPILED GGSL ERROR SOURCE: From shader wiiobject.frag with error code 0: 0(192) : error C1067: too little data in type constructor
+COMPILED GGSL ERROR SOURCE: From shader wiiobject.frag with error code 0: 0(186) : error C1503: undefined variable "combine"
 #version 420
 #extension GL_ARB_explicit_uniform_location : require
 
+uniform vec4 layerOpacities;
 uniform int LAYER1_COLORSET;
 uniform int LAYER1_DIFFUSEENABLE;
 uniform int COMBINE_OP_1;
@@ -23,6 +24,9 @@ uniform int LIGHTMAP_STAGE;
 uniform vec4 specular_specular;
 uniform vec4 specular_params;
 uniform vec3 ambientColor;
+uniform vec4 layer3_diffuse;
+uniform vec4 layer2_diffuse;
+uniform vec4 layer1_diffuse;
 uniform vec4 layer0_diffuse;
 uniform float alphaCutoff;
 uniform int lightmapReady;
@@ -164,11 +168,44 @@ vec4 getColor() {
         }else{
             surfaceColor = (baseColor * vec4(pow(layer0_diffuse.rgb, vec3(gamma)), 1));
         };
+        surfaceColor.a *= layerOpacities.r;
     }else{
         vec4 samplerColor = texture(layer0_sampler, uv0);
         surfaceColor = (samplerColor * baseColor);
+        surfaceColor.a *= (fs_layer0_color.a * layerOpacities.r);
+    };
+    vec4 layer1Color = vec4(0);
+    if((COMBINE_OP_1 == 1)){
+        if((LAYER1_DIFFUSEENABLE == 1)){
+            layer1Color = vec4(pow(layer1_diffuse.rgb, vec3(gamma)), layer1_diffuse.a);
+        }else{
+            layer1Color = texture(layer1_sampler, uv0);
+            layer1Color.a *= layer1_diffuse.a;
+        };
+        layer1Color.rgb *= baseColor.rgb;
+        layer1Color.a *= layerOpacities.g;
+        surfaceColor = combine(COMBINE_OP_1, layer1Color, surfaceColor);
     };
     return surfaceColor;
+} ;
+vec4 combine(int operation, vec4 src, vec4 dst) {
+    if((operation == 1)){
+        return vec4(((dst.rgb * (1.0f - src.a)) + (src.rgb * src.a)), (1.0f - ((1.0f - dst.a) * (1.0f - src.a))));
+    }else{
+        if((operation == 2)){
+            return vec4((dst.rgb + (src.rgb * src.a)), dst.a);
+        }else{
+            if((operation == 3)){
+                return vec4((dst.rgb - (src.rgb * src.a)), dst.a);
+            }else{
+                if((operation == 4)){
+                    return vec4((dst.rgb * ((src.rgb * src.a) + vec3((1.0f - src.a), (1.0f - src.a), (1.0f - src.a)))), dst.a);
+                }else{
+                    return dst;
+                };
+            };
+        };
+    };
 } ;
 vec4 shadeSurface(vec4 surfaceColor, vec3 reflectivity) {
     if((LIGHTMAP_STAGE != 0)){
@@ -190,7 +227,7 @@ vec4 shadeSurface(vec4 surfaceColor, vec3 reflectivity) {
             }else{
                 if((((diffuseLight.r > 1) || (diffuseLight.g > 1)) || (diffuseLight.b > 1))){
                 };
-                return vec4(dot(normal.rgb, vec3(0.5f, 0.5f, 0)), surfaceColor.a);
+                return vec4(((surfaceColor.rgb * diffuseLight.rgb) + reflectivity), surfaceColor.a);
             };
         };
     };

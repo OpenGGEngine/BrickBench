@@ -65,10 +65,12 @@ public class GizLoader {
                             int inner1 = Byte.toUnsignedInt(fileData.get());
                             int inner2 = Byte.toUnsignedInt(fileData.get());
 
+                            List<SpecialObject> specialObjects = new ArrayList<>();
                             for (int j = 0; j < inner2; j++) {
                                 int len = Byte.toUnsignedInt(fileData.get());
                                 if(len != 0){
                                     String specialObject = Util.getStringFromBuffer(fileData,len);
+                                    specialObjects.add(mapData.getSpecialObjectByName(specialObject).get());
                                 }
                                 float inner3 = fileData.getFloat();
                                 float inner4 = fileData.getFloat();
@@ -135,7 +137,7 @@ public class GizLoader {
                                 }
                             }
 
-
+                            mapData.gizmo().gizmos().add(new Gizmo.Forcible(name,position,specialObjects));
                         }
                     }
                 }
@@ -430,9 +432,9 @@ public class GizLoader {
                                 name = Util.getStringFromBuffer(fileData, len2);
                             }
                             Vector3f position = new Vector3f(fileData.getFloat(),fileData.getFloat(),fileData.getFloat());
-                            var a1 = Util.shortAngleToFloat(fileData.getShort());
-                            var a2 = Util.shortAngleToFloat(fileData.getShort());
-                            var a3 = Util.shortAngleToFloat(fileData.getShort());
+                            var a1 = Util.shortAngleToFloat2(fileData.getShort());
+                            var a2 = Util.shortAngleToFloat2(fileData.getShort());
+                            var a3 = Util.shortAngleToFloat2(fileData.getShort());
                             var studCount = 0;
                             if(version >= 2){
                                 var out = 0;

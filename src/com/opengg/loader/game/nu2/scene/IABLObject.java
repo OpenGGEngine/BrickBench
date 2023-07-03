@@ -19,4 +19,8 @@ public record IABLObject (Matrix4f transform, IABLBoundingBox bounds, int addres
     public Vector3f scale(){
         return new Vector3f(transform.m00, transform.m11, transform.m22);
     }
+
+    public record RealIABLObject(int short1,int short2){
+
+    }
 }

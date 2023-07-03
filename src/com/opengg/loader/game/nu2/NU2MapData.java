@@ -8,19 +8,15 @@ import com.opengg.loader.MapData;
 import com.opengg.loader.MapXml;
 import com.opengg.loader.Project;
 import com.opengg.loader.components.MapComponent;
+import com.opengg.loader.game.nu2.ai.*;
 import com.opengg.loader.game.nu2.gizmo.GitNode;
 import com.opengg.loader.game.nu2.gizmo.Gizmo;
 import com.opengg.loader.game.nu2.rtl.RTLLight;
 import com.opengg.loader.game.nu2.scene.*;
-import com.opengg.loader.game.nu2.ai.CreatureSpawn;
-import com.opengg.loader.game.nu2.ai.AILocator;
-import com.opengg.loader.game.nu2.ai.WorldTrigger;
 import com.opengg.loader.game.nu2.terrain.InfiniteWall;
 import com.opengg.loader.game.nu2.terrain.TerrainGroup;
-import com.opengg.loader.game.nu2.ai.AILocatorSet;
 import com.opengg.loader.loading.FileLoadException;
 import com.opengg.loader.loading.MapLoader;
-import com.opengg.loader.game.nu2.ai.AI2Loader;
 import com.opengg.loader.game.nu2.gizmo.GitLoader;
 import com.opengg.loader.game.nu2.gizmo.GizLoader;
 import com.opengg.loader.game.nu2.gizmo.GizWriter;
@@ -75,6 +71,7 @@ public record NU2MapData(String name,
                              List<SpecialObject> specialObjects,
                              List<Portal> portalList,
                              List<Spline> splines,
+                             List<Anim> animations,
                              List<IABLObject.IABLBoundingBox> boundingBoxes,
                              Map<Integer, FileMaterial> materials,
                              Map<Integer, GSCMesh> meshes,
@@ -100,6 +97,7 @@ public record NU2MapData(String name,
                              FastInt textureCount){
         public SceneData(){
             this(
+                    new ArrayList<>(),
                     new ArrayList<>(),
                     new ArrayList<>(),
                     new ArrayList<>(),
@@ -182,13 +180,14 @@ public record NU2MapData(String name,
                          List<AILocator> aiLocators,
                          List<AILocatorSet> aiLocatorSets,
                          List<CreatureSpawn> creatureSpawns,
+                         List<AIPath> paths,
                          FastInt version,
                          FastInt locatorAddress,
                          FastInt locatorSetAddress,
                          FastInt creatureStartAddress,
                          FastInt creatureEndAddress){
         public AIData(){
-            this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),new ArrayList<>(), new FastInt(), new FastInt(), new FastInt(), new FastInt(), new FastInt());
+            this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),new ArrayList<>(), new ArrayList<>(), new FastInt(), new FastInt(), new FastInt(), new FastInt(), new FastInt());
         }
     }
 
@@ -268,11 +267,14 @@ public record NU2MapData(String name,
     @Override
     public Map<String, EditorEntity<?>> getNamespace() {
         var namespace = new LinkedHashMap<String, EditorEntity<?>>();
+        List<AIPath.AIPathPoint> pathPoints = this.ai().paths().stream().map(AIPath::pathPoints).flatMap(Collection::stream).toList();
         var allLists = List.of(
                 this.ai().aiLocators(),
                 this.ai().creatureSpawns(),
                 this.ai().triggers(),
                 this.ai().aiLocatorSets(),
+                this.ai().paths(),
+                pathPoints,
                 this.git().gitNodes().values(),
                 this.txt().doors(),
                 this.gizmo().gizmos(),
