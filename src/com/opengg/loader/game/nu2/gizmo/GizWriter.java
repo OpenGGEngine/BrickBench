@@ -75,7 +75,7 @@ public class GizWriter {
 
             gizmoName = "Pup_" + gizmoData.gizCount;
             newGizmo = ByteBuffer.allocate(newGizLength).order(ByteOrder.LITTLE_ENDIAN).put(Util.getStringBytes(gizmoName, 8))
-                   .put(BrickBench.CURRENT.ingamePosition.toLittleEndianByteBuffer()).put((byte)115).rewind();
+                   .put(BrickBench.CURRENT.ingamePosition.toLittleEndianByteBuffer()).put((byte)115).put((byte)0).put((byte)0).rewind().slice(0,newGizLength);
 
             gizmoCountPosition = gizmoData.start + 4;
         }else if(type.equals("ZipUp")){

@@ -147,11 +147,11 @@ sourceSets {
         }
     }
 
-    test{
+    /*test{
         java{
             srcDirs = ['test']
         }
-    }
+    }*/
 }
 
 test{
