@@ -206,7 +206,9 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         global.addActionListener(a -> {
             try {
                 if(global.isSelected()){
-                    GlobalScreen.registerNativeHook();
+                    if(!GlobalScreen.isNativeHookRegistered()) {
+                        GlobalScreen.registerNativeHook();
+                    }
                     Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
                     logger.setLevel(Level.SEVERE);
                     logger.setUseParentHandlers(false);
