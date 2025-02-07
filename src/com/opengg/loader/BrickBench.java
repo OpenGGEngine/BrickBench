@@ -262,16 +262,22 @@ public class BrickBench extends GGApplication
                 Map.entry("cache-textures", "true"),
                 Map.entry("enhanced-graphics", "true"),
                 Map.entry(GameVersion.LSW_TCS.SHORT_NAME + "-hook-executable-name", GameVersion.LSW_TCS.EXECUTABLE),
-                Map.entry(GameVersion.LIJ1.SHORT_NAME + "-hook-executable-name", GameVersion.LIJ1.EXECUTABLE));
+                Map.entry(GameVersion.LIJ1.SHORT_NAME + "-hook-executable-name", GameVersion.LIJ1.EXECUTABLE),
+                Map.entry(GameVersion.LB1.SHORT_NAME + "-hook-executable-name", GameVersion.LB1.EXECUTABLE));
 
         try {
             Configuration.load(Path.of(dataPath.toString(), "config", "editor.ini"));
-            Configuration.load(Path.of(dataPath.toString(), "config", "recent.ini"));
-
         } catch (IOException e) {
             ConfigFile file = new ConfigFile("editor.ini", new LinkedHashMap<>());
             Configuration.addConfigFile(file);
+            GGConsole.log("Could not find editor.ini. Initializing");
+        }
+
+        try {
+            Configuration.load(Path.of(dataPath.toString(), "config", "recent.ini"));
+        } catch (IOException e) {
             Configuration.addConfigFile(new ConfigFile("recent.ini", new LinkedHashMap<>()));
+            GGConsole.log("Could not find recent.ini. Initializing");
         }
 
         for (var entry : defaults.entrySet()) {
