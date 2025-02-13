@@ -104,10 +104,34 @@ public sealed interface Gizmo extends MapEntity<Gizmo>, Selectable  {
 
     }
 
-    record GizPickup(String name, Vector3f pos, PickupType type, int fileAddress, int fileLength, int index) implements Gizmo{
+    record GizPickup(String name, Vector3f pos, PickupType type,int version,int spawnGroup,SpawnType spawnType, int fileAddress, int fileLength, int index) implements Gizmo{
         @Override
         public BoundingBox getBoundingBox() {
             return new BoundingBox(pos.subtract(0.1f), pos.add(0.1f));
+        }
+
+        public enum SpawnType{
+            //already spawned in level (unless part of unspawned spawn group)
+            NONE, 
+            //Need to do more research on this, used for minikits that spawn in
+            TRIGGERED, 
+            //Automatically collects the pickup after it has spawned
+            AUTO_COLLECT; 
+
+            byte getVal(){
+                return switch(this){
+                    case NONE->0;
+                    case TRIGGERED->2;
+                    case AUTO_COLLECT->6;
+                };
+            }
+            static SpawnType getType(byte n){
+                return switch(n){
+                    case 2->TRIGGERED;
+                    case 6->AUTO_COLLECT;
+                    default->NONE;
+                };
+            }
         }
 
         public enum PickupType{
@@ -171,11 +195,25 @@ public sealed interface Gizmo extends MapEntity<Gizmo>, Selectable  {
 
         @Override
         public List<Property> properties(){
-            return List.of(
-                    new StringProperty("Name", name(), true, 8),
-                    new VectorProperty("Position", pos(), true,true),
-                    new EnumProperty("Pickup type", type, true)
-            );
+            List<Property> src = List.of(
+                new StringProperty("Name", name(), true, 8),
+                new VectorProperty("Position", pos(), true,true),
+                new EnumProperty("Pickup type", type, true)
+                );
+            if(version>=2){
+                src = new ArrayList<>(src);
+                src.addAll(List.of(
+                        new EnumProperty("Spawn type",spawnType, true)
+                ));
+            }
+            if(version>=3){
+                src = new ArrayList<>(src);
+                src.addAll(List.of(
+                        new IntegerProperty("Spawn group",spawnGroup, true)
+                ));
+                
+            }
+            return src;
         }
 
         @Override
@@ -186,6 +224,13 @@ public sealed interface Gizmo extends MapEntity<Gizmo>, Selectable  {
                 case EnumProperty eProp when propName.equals("Pickup type") -> {
                     var colorChar = ((PickupType) eProp.value()).getCode();
                     MapWriter.applyPatch(MapWriter.WritableObject.GIZMO, fileAddress + 12 + 8, new byte[]{(byte) colorChar});
+                }
+                case IntegerProperty iProp when propName.equals("Spawn group")->{
+                    MapWriter.applyPatch(MapWriter.WritableObject.GIZMO,fileAddress+12+8+1+1,new byte[]{(byte)iProp.value()});
+                }
+                case EnumProperty eProp when propName.equals("Spawn type")->{
+                    byte v = ((SpawnType)eProp.value()).getVal();
+                    MapWriter.applyPatch(MapWriter.WritableObject.GIZMO,fileAddress+12+8+1,new byte[]{v});
                 }
                 case null, default -> {
                 }

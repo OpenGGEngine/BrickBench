@@ -29,8 +29,8 @@ public class RTLLoader {
             int address = data.position();
             Vector3f pos = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f rot = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
-            Vector3f tempColor = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f color = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
+            Vector3f high_color = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f flickerColor = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
    
             //MapViewer.pointsToV(u1);
@@ -44,9 +44,19 @@ public class RTLLoader {
             float d3 = data.getFloat();
             float d4 = data.getFloat();
 
-            var unk = data.getFloat();//data.getInt();
+            var timer = data.getFloat();//data.getInt();
 
-            var type = RTLLight.LightType.getLightTypeFromId((byte) data.getShort());
+            //var type = RTLLight.LightType.getLightTypeFromId((byte) data.getShort());
+            
+            //LIN - Added light option :D - 18/11/2024
+            short shortData = data.getShort(); // Obtiene el short
+            var type = RTLLight.LightType.getLightTypeFromId((byte)shortData);
+            System.out.println("Type: " + type);
+            byte highByte_TOUSE = (byte) ((shortData >> 8) & 0xFF); // Byte más significativo
+            System.out.println("high byte: " + highByte_TOUSE);
+            var options = RTLLight.LightOption.getLightOptionFromId(highByte_TOUSE);
+            System.out.println("Option: " + options);
+
             var d5 = data.getShort();
             var d6 = data.getShort();
             var d7 = data.getShort();
@@ -60,11 +70,9 @@ public class RTLLoader {
             var multiplier = data.getFloat();
             var i2 = data.getInt();
 
-            //System.out.println(d1 + " " + d2 + " " + d3 + " " + d4 + " " + d5 + " " + d6 + " " + d7 + " " + d8 + " " + d9 + " " + d10 + " " + unk + " " + i1 + " " + i2);
-
             if (type != RTLLight.LightType.INVALID) {
                 System.out.println(i + " " + address + " " + type);
-                mapData.rtl().lights().add(new RTLLight(pos, rot, color, flickerColor, type, radius, falloff, multiplier, address, i));
+                mapData.rtl().lights().add(new RTLLight(pos, rot, color, high_color, flickerColor, type, options, radius, falloff, multiplier, d1, d2, d3, d4, timer, address, i));
             }
         }
         //System.out.println("---------------------------------------------");

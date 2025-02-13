@@ -5,6 +5,7 @@ import com.opengg.core.math.Vector3f;
 import com.opengg.loader.BrickBench;
 import com.opengg.loader.Util;
 import com.opengg.loader.game.nu2.NU2MapData;
+import com.opengg.loader.game.nu2.gizmo.Gizmo.GizPickup.SpawnType;
 import com.opengg.loader.game.nu2.scene.SpecialObject;
 
 import java.nio.ByteBuffer;
@@ -582,11 +583,11 @@ public class GizLoader {
                     version = fileData.getInt();
                     gizCount = fileData.getInt();
                     if (version >= 3) {
-                        fileData.getInt();
+                        fileData.getInt(); //prequel levels have 1, og trilogy has 3?
                     }
                     if (version >= 5) {
-                        fileData.getFloat();
-                        fileData.getFloat();
+                        fileData.getFloat(); //draw distance
+                        fileData.getFloat(); //scale (applies to entire area)
                     }
                     for (int i = 0; i < gizCount; i++) {
                         int address = fileData.position();
@@ -613,15 +614,19 @@ public class GizLoader {
                             default -> Gizmo.GizPickup.PickupType.UNKNOWN;
                         };
 
-                        //Both likely padding
-                        if (version >= 2) {
-                            fileData.get();
+                        int spawnGroup=0;
+                        byte spawnType=0;
+                        //pickup spawn type? (used mostly for minikits that spawn after doing something)
+                        if (version >= 2) { 
+                            spawnType = fileData.get();
                         }
-                        if (version >= 3) {
-                            fileData.get();
+                        //pickup spawn group (make multiple pickups of same group spawn at same time, unused but works in TCS)
+                        if (version >= 3) { 
+                            spawnGroup = fileData.get();
                         }
 
-                        mapData.gizmo().gizmos().add(new Gizmo.GizPickup(pickupName, pos, realType, address, fileData.position() - address, i));
+                        mapData.gizmo().gizmos().add(new Gizmo.GizPickup(pickupName, pos, realType,version,
+                        spawnGroup,SpawnType.getType(spawnType), address, fileData.position() - address, i));
                     }
                 }
                 case "Lever" -> {
