@@ -29,8 +29,10 @@ public class RTLLoader {
             int address = data.position();
             Vector3f pos = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
             Vector3f rot = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
-            Vector3f tempColor = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
+
             Vector3f color = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
+            Vector3f color2 = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
+
             Vector3f flickerColor = new Vector3f(data.getFloat(),data.getFloat(),data.getFloat());
    
             //MapViewer.pointsToV(u1);
@@ -64,7 +66,7 @@ public class RTLLoader {
 
             if (type != RTLLight.LightType.INVALID) {
                 System.out.println(i + " " + address + " " + type);
-                mapData.rtl().lights().add(new RTLLight(pos, rot, color, flickerColor, type, radius, falloff, multiplier, address, i));
+                mapData.rtl().lights().add(new RTLLight(pos, rot, color, color2, flickerColor, type, radius, falloff, multiplier, address, i));
             }
         }
         //System.out.println("---------------------------------------------");

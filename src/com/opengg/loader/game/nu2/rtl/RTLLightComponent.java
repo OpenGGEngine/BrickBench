@@ -2,6 +2,7 @@ package com.opengg.loader.game.nu2.rtl;
 
 import com.opengg.core.math.Vector3f;
 import com.opengg.core.math.Quaternionf;
+import com.opengg.core.render.Renderable;
 import com.opengg.core.render.SceneRenderUnit;
 import com.opengg.core.render.objects.ObjectCreator;
 import com.opengg.core.render.objects.TextureRenderable;
@@ -13,6 +14,9 @@ import com.opengg.loader.components.NativeCache;
 import java.awt.*;
 
 public class RTLLightComponent extends EditorEntityRenderComponent {
+
+    private static final Renderable directionalRenderable = ObjectCreator.createQuadPrism(new Vector3f(0.01f, -0.01f, -0.01f), new Vector3f(0.2f, 0.01f, 0.01f));
+
     public RTLLightComponent(RTLLight light) {
         super(light, new SceneRenderUnit.UnitProperties().shaderPipeline("xFixOnly"));
         this.setPositionOffset(light.pos());
@@ -21,7 +25,7 @@ public class RTLLightComponent extends EditorEntityRenderComponent {
         this.setRotationOffset(Quaternionf.createYXZ(light.rot().normalize()));
 
         if (light.type() == RTLLight.LightType.DIRECTIONAL) {
-            this.setRenderable(new TextureRenderable(RenderableGroup.of(NativeCache.CUBE, ObjectCreator.createQuadPrism(new Vector3f(0.01f, -0.01f, -0.01f), new Vector3f(0.2f, 0.01f, 0.01f))),
+            this.setRenderable(new TextureRenderable(RenderableGroup.of(NativeCache.CUBE, directionalRenderable),
                 Texture.ofColor(new Color(light.color().x, light.color().y, light.color().z))));
         } else {
             this.setRenderable(new TextureRenderable(NativeCache.CUBE, Texture.ofColor(new Color(light.color().x, light.color().y, light.color().z))));
