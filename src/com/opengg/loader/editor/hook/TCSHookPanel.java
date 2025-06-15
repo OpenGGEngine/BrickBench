@@ -73,6 +73,7 @@ public class TCSHookPanel extends JPanel implements EditorTab {
 
         doorCombo = new JComboBox<>();
         doorCombo.setEnabled(false);
+        doorCombo.setToolTipText("Enable Reset Door on Load to enable door selection");
 
         mapCombo.addActionListener(m -> {
             int mapIntId = mapNameToID.get((String) mapCombo.getSelectedItem());
@@ -80,33 +81,39 @@ public class TCSHookPanel extends JPanel implements EditorTab {
             String levelDir = mapIDToDirectory.get(mapIntId);
 
             try{
-                var newMap = Path.of(TCSHookManager.currentHook.getDirectory().normalize().toString(), "levels",levelDir,mapCombo.getSelectedItem()+".txt");
-                try(Scanner fis = new Scanner(new File(newMap.normalize().toString()))){
-                    boolean inDoor = false;
+                if(TCSHookManager.currentHook != null) {
+                    var newMap = Path.of(TCSHookManager.currentHook.getDirectory().normalize().toString(), "levels", levelDir, mapCombo.getSelectedItem() + ".txt");
+                    try (Scanner fis = new Scanner(new File(newMap.normalize().toString()))) {
+                        boolean inDoor = false;
 
-                    Vector<String> doors = new Vector<>();
+                        Vector<String> doors = new Vector<>();
 
-                    doors.add("<Default Start>");
+                        doors.add("<Default Start>");
 
-                    while(fis.hasNext()){
-                        String line = fis.nextLine();
-                        if(inDoor && line.toLowerCase().contains("spline")){
-                            String spline = line.substring(line.indexOf('"')+1,line.lastIndexOf('"'));
-                            doors.add(spline);
+                        while (fis.hasNext()) {
+                            String line = fis.nextLine();
+                            if (inDoor && line.toLowerCase().contains("spline")) {
+                                String spline = line.substring(line.indexOf('"') + 1, line.lastIndexOf('"'));
+                                doors.add(spline);
+                            }
+
+                            if (line.toLowerCase().contains("door_start")) {
+                                inDoor = true;
+                            } else if (line.toLowerCase().contains("door_end")) {
+                                inDoor = false;
+                            }
                         }
 
-                        if(line.toLowerCase().contains("door_start")){
-                            inDoor = true;
-                        } else if (line.toLowerCase().contains("door_end")){
-                            inDoor = false;
-                        }
+                        doorCombo.setModel(new DefaultComboBoxModel<>(doors));
+                    } catch (FileNotFoundException e) {
+                        GGConsole.log("Unable to read txt file for map. Are your files fully extracted?");
+                    } catch (Exception e) {
+                        System.out.println(e);
                     }
-
+                } else {
+                    Vector<String> doors = new Vector<>();
+                    doors.add("<Default Start>");
                     doorCombo.setModel(new DefaultComboBoxModel<>(doors));
-                } catch (FileNotFoundException e){
-                    GGConsole.log("Unable to read txt file for map. Are your files fully extracted?");
-                } catch (Exception e){
-                    System.out.println(e);
                 }
             } catch (InvalidPathException e) {
                 //no real map yet

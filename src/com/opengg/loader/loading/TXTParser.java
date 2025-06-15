@@ -21,7 +21,7 @@ public abstract class TXTParser {
                 if(tokens[0].endsWith("_start")){
                     currentBlock = tokens[0].substring(0,tokens[0].length()-6);
                     parseBlockStart(tokens);
-                }else if(tokens[0].endsWith("_end")){
+                }else if(!currentBlock.isEmpty() && tokens[0].endsWith("_end")){
                     parseBlockEnd(tokens);
                     currentBlock = "";
                 }else{
