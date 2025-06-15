@@ -335,6 +335,11 @@ public class AI2Loader{
 
                 String charType = new String(text).substring(0, new String(text).indexOf('\0'));
 
+                if(version >= 0x15){
+                    var itemLength = fileData.get();
+                    var itemName = Util.getStringFromBuffer(fileData,itemLength).trim();
+                }
+
                 Vector3f startPoint = new Vector3f(fileData.getFloat(),fileData.getFloat(),fileData.getFloat());
                 float startAngle = Util.shortAngleToFloat(fileData.getShort());
                 if(version >= 16){
