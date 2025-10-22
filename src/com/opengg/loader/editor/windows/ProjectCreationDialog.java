@@ -91,10 +91,13 @@ public class ProjectCreationDialog extends JDialog {
             }
 
             try {
-                var projectPath = Resource.getUserDataPath().resolve("project");
+                var projectPath = Resource.getUserDataPath().resolve("projecttemp");
                 var outputFile = path.getFile().resolve(name.getText().trim() + ".brickbench");
 
-                FileUtils.deleteDirectory(projectPath.toFile());
+                if(Files.exists(projectPath)) {
+                    FileUtils.deleteDirectory(projectPath.toFile());
+                }
+
                 Files.createDirectories(projectPath);
                 var project = new Project(
                         true, Project.GameVersion.LSW_TCS, name.getText().trim(), projectPath.resolve("project.xml"),
@@ -104,6 +107,11 @@ public class ProjectCreationDialog extends JDialog {
                 );
 
                 var success = ProjectIO.saveProject(project, outputFile);
+
+                if(Files.exists(projectPath)) {
+                    FileUtils.deleteDirectory(projectPath.toFile());
+                }
+
                 if(success) OpenGG.asyncExec(() -> BrickBench.CURRENT.loadNewProject(outputFile));
                 this.dispose();
             } catch (IOException e) {
