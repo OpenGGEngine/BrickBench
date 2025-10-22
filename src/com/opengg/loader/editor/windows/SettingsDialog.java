@@ -14,6 +14,8 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -42,24 +44,27 @@ public class SettingsDialog extends JDialog {
         settingsMenuPanel.setPreferredSize(new Dimension(350, 400));
         settingsMenuPanel.setLayout(new BoxLayout(settingsMenuPanel, BoxLayout.Y_AXIS));
         String[] s = new String[]{"Look and Feel", "Controls", "Editor", "Game Hook", "Advanced"};
-        var list = new JList<>(s); //data has type Object[]
-        list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        var list = new JList<>(s);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
         list.setVisibleRowCount(10);
         list.setFixedCellHeight(40);
         list.setFixedCellWidth(100);
-        list.addMouseListener(new MouseAdapter() {
-                                  public void mouseClicked(MouseEvent evt) {
-                                      switch (((JList<String>) evt.getSource()).getSelectedIndex()) {
-                                          case 0 -> useLafPanel();
-                                          case 2 -> useEditorPanel();
-                                          case 1 -> useControlsPanel();
-                                          case 3 -> useHookPanel();
-                                          case 4 -> useAdvancedPanel();
-                                          default -> GGConsole.warning("Invalid Menu Option");
-                                      }
-                                  }
-                              });
+
+        list.addListSelectionListener(e -> {
+            if(e.getValueIsAdjusting())
+                return;
+
+            switch (list.getSelectedIndex()) {
+                case 0 -> useLafPanel();
+                case 2 -> useEditorPanel();
+                case 1 -> useControlsPanel();
+                case 3 -> useHookPanel();
+                case 4 -> useAdvancedPanel();
+                default -> GGConsole.warning("Invalid Menu Option");
+            }
+        });
+
 
         settingsPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         settingsPanel.setPreferredSize(new Dimension(500, 400));
