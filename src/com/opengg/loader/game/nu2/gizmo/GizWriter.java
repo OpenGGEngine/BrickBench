@@ -9,11 +9,11 @@ import com.opengg.loader.editor.EditorState;
 import com.opengg.loader.game.nu2.NU2MapData;
 import com.opengg.loader.loading.MapLoader;
 import com.opengg.loader.loading.MapWriter;
-import com.opengg.loader.game.nu2.gizmo.Gizmo;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.List;
 
 public class GizWriter {
     private static void addGizmoSlot(String gizmoName){
@@ -30,6 +30,20 @@ public class GizWriter {
             MapWriter.addSpaceAtLocation(MapWriter.WritableObject.GIZMO, 4, buffer.capacity());
             MapWriter.applyPatch(MapWriter.WritableObject.GIZMO, 4, buffer);
         }
+    }
+
+    public static String assignNewGizmoName(List<? extends Gizmo> gizmos, String prefix){
+        int counter = 0;
+        for(Gizmo gizmo : gizmos){
+            if(gizmo.name().startsWith(prefix)) {
+                String number = gizmo.name().substring(prefix.length());
+                try {
+                    counter = Math.max(Integer.parseInt(number),counter);
+                } catch (NumberFormatException _) {
+                }
+            }
+        }
+        return prefix + (counter+1);
     }
 
     public static String addNewGizmo(String type){
@@ -55,7 +69,7 @@ public class GizWriter {
         int gizmoCountPosition = 0;
         if(type.equals("Tube")){
             gizmoCountPosition = gizmoData.start + 4;
-            gizmoName = "Tube_" + gizmoData.gizCount;
+            gizmoName = assignNewGizmoName(gizData.getTubes(),"Tube_");
             newGizLength = switch (gizmoData.version){
                 case 0, 1 -> 0x10 + 12 + 4 + 4;
                 case 2 -> 0x10 + 12 + 4 + 4 + 1;
@@ -73,7 +87,7 @@ public class GizWriter {
                 default -> 8 + 12 + 1 + 1 + 1;
             };
 
-            gizmoName = "Pup_" + gizmoData.gizCount;
+            gizmoName = assignNewGizmoName(gizData.getPickups(),"Pup_");
             newGizmo = ByteBuffer.allocate(newGizLength).order(ByteOrder.LITTLE_ENDIAN).put(Util.getStringBytes(gizmoName, 8))
                    .put(BrickBench.CURRENT.ingamePosition.toLittleEndianByteBuffer()).put((byte)115).rewind();
 
@@ -86,7 +100,7 @@ public class GizWriter {
                 case 3 -> 16+12+12+12+2+2+1+1+1+1+1;
                 default -> max;
             };
-            gizmoName = "ZipUp_" + gizmoData.gizCount;
+            gizmoName = assignNewGizmoName(gizData.getZipUps(),"ZipUp_");
             newGizmo = ByteBuffer.allocate(max).order(ByteOrder.LITTLE_ENDIAN)
                     .put(Util.getStringBytes(gizmoName, 16))
                     .put(BrickBench.CURRENT.ingamePosition.toLittleEndianByteBuffer())
@@ -105,7 +119,7 @@ public class GizWriter {
                 case 5 -> 16+12+2+1+1+4+1+16;
                 default -> max;
             };
-            gizmoName = "Lever_" + gizmoData.gizCount;
+            gizmoName = assignNewGizmoName(gizData.getLevers(), "Lever_");
 
             newGizmo = ByteBuffer.allocate(max).order(ByteOrder.LITTLE_ENDIAN)
                     .put(Util.getStringBytes(gizmoName, 16))
@@ -128,7 +142,7 @@ public class GizWriter {
                 case 4 -> 4+8+12+2+1+1+16;
                 default -> max;
             };
-            gizmoName = "Hat_" + gizmoData.gizCount;
+            gizmoName = assignNewGizmoName(gizData.getHatMachines(), "Hat_");
             newGizmo = ByteBuffer.allocate(max).order(ByteOrder.LITTLE_ENDIAN)
                     .putInt(8)
                     .put(Util.getStringBytes(gizmoName, 8))
@@ -151,7 +165,7 @@ public class GizWriter {
                 case 7 -> 4+10+12+2+1+1+16+1+2+1;
                 default -> max;
             };
-            gizmoName = "Panel_" + gizmoData.gizCount;
+            gizmoName = assignNewGizmoName(gizData.getPanels(), "Panel_");
             newGizmo = ByteBuffer.allocate(max).order(ByteOrder.LITTLE_ENDIAN)
                     .putInt(10)
                     .put(Util.getStringBytes(gizmoName, 10))
@@ -189,7 +203,7 @@ public class GizWriter {
         var gizmoData = ((NU2MapData)EditorState.getActiveMap().levelData()).gizmo().gizmoVersions().get(name);
         MapWriter.removeSpaceAtLocation(MapWriter.WritableObject.GIZMO, gizmo.fileAddress(), gizmo.fileLength());
         MapWriter.applyPatch(MapWriter.WritableObject.GIZMO, gizmoData.start + 4, Util.littleEndian(gizmoData.gizCount - 1));
-  
+        EditorState.clearTempEditorComponents();
     }
 
     public record GizmoTypeData(int version, int start, int end, int gizCount){}

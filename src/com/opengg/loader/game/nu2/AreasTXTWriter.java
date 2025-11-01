@@ -36,6 +36,7 @@ public class AreasTXTWriter {
             if(!entry.hasPickupGravity) str.append("\tnopickupgravity\n");
             if(entry.isSingleBuffer) str.append("\tsingle_buffer\n");
 
+            if(!entry.hasFreeplay) str.append("\tno_freeplay\n");
             if(!entry.givesGoldBrick) str.append("\tno_gold_brick\n");
             if(!entry.givesCompletionPoints) str.append("\tno_completion_points\n");
 

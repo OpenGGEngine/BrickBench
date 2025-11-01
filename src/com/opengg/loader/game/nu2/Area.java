@@ -32,7 +32,7 @@ public final class Area implements ProjectStructure.Node<Area> {
 
     @Override
     public String path() {
-        return "Areas/";
+        return "Areas/" + name();
     }
 
     @Override

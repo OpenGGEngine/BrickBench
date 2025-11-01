@@ -161,6 +161,10 @@ public record NU2MapData(String name,
         public List<Gizmo.ZipUp> getZipUps() {
             return gizmos.stream().filter(s -> s instanceof Gizmo.ZipUp).map(g -> (Gizmo.ZipUp)g).collect(Collectors.toList());
         }
+
+        public List<Gizmo.Tube> getTubes() {
+            return gizmos.stream().filter(s -> s instanceof Gizmo.Tube).map(g -> (Gizmo.Tube)g).collect(Collectors.toList());
+        }
     }
 
     public record TerrainData(FastInt workingAreaEnd,

@@ -330,6 +330,13 @@ public class EditorState {
         return selectObject("", mapObject);
     }
 
+    public static void clearTempEditorComponents() {
+        if(CURRENT != null) {
+            CURRENT.temporaryEditorComponents.forEach(Component::delete);
+            CURRENT.temporaryEditorComponents.clear();
+        }
+    }
+
     /**
      * Selects an object with an explicit namespace for future accesses.
      * This method selects the given object from the explicitly given namespace.
