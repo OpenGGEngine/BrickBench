@@ -1,8 +1,12 @@
 package com.opengg.loader.editor.tabs;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.extras.components.FlatButton;
 import com.formdev.flatlaf.extras.components.FlatToggleButton;
+import com.formdev.flatlaf.icons.FlatFileViewFloppyDriveIcon;
 import com.opengg.core.engine.OpenGG;
+import com.opengg.core.io.input.keyboard.KeyboardController;
+import com.opengg.loader.BrickBench;
 import com.opengg.loader.EditorEntity;
 import com.opengg.loader.editor.EditorIcons;
 import com.opengg.loader.editor.EditorState;
@@ -32,6 +36,7 @@ public class EditorPane extends JPanel implements EditorTab {
     public static EditorPane instance;
 
     private JTextField name = new JTextField("Temp Object");
+    private FlatButton nameSave = new FlatButton();
     private JLabel type = new JLabel("Spline");
     private JPanel defaultPanel;
     private JPanel holder;
@@ -48,7 +53,6 @@ public class EditorPane extends JPanel implements EditorTab {
         holder.setLayout(new BoxLayout(holder,BoxLayout.Y_AXIS));
 
         pane = new JScrollPaneBackgroundSnatcher(holder);
-        //pane.setBorder(BorderFactory.createEmptyBorder());
         pane.setBorder(BorderFactory.createMatteBorder(2,0,0,0,UIManager.getColor("Separator.foreground")));
 
         topBar = new JPanel();
@@ -57,6 +61,10 @@ public class EditorPane extends JPanel implements EditorTab {
         topBar.add(type);
         topBar.add(Box.createRigidArea(new Dimension(40,0)));
         topBar.add(name);
+
+        nameSave.setIcon(new FlatFileViewFloppyDriveIcon());
+        nameSave.setVisible(false);
+        topBar.add(nameSave);
 
         FlatSVGIcon trashSVG = EditorIcons.trash;
         trashSVG.setColorFilter(EditorTheme.iconFilter);
@@ -100,7 +108,28 @@ public class EditorPane extends JPanel implements EditorTab {
             name.setText(nameSProperty.stringValue());
             if (nameSProperty.editable()) {
                 name.setEditable(true);
-                name.addActionListener(a -> gameObject.get().applyPropertyEdit("Name", new EditorEntity.StringProperty("Name", name.getText(), true, nameSProperty.maxLen())));
+                nameSave.setVisible(true);
+                nameSave.setEnabled(true);
+                ActionListener[] listeners = nameSave.getActionListeners();
+                for (ActionListener listener : listeners) {
+                    nameSave.removeActionListener(listener);
+                }
+                nameSave.addActionListener(e -> {
+                    BrickBench.CURRENT.player.dropInputs();
+                    KeyboardController.resetKeyStates();
+                    if(name.getText().length() <= nameSProperty.maxLen()){
+                        gameObject.get().applyPropertyEdit("Name", new EditorEntity.StringProperty("Name", name.getText(), true, nameSProperty.maxLen()));
+                    }else if(name.getText().isBlank()){
+                        JOptionPane.showMessageDialog(null, "Object name cannot be empty.");
+                    }else{
+                        JOptionPane.showMessageDialog(null, "Object name exceeds max length (" + nameSProperty.maxLen() + "). Use a shorter name.");
+                    }
+                    BrickBench.CURRENT.player.dropInputs();
+                    KeyboardController.resetKeyStates();
+                });
+            }else{
+                nameSave.setVisible(false);
+                nameSave.setEnabled(false);
             }
         }else {
             name.setText(gameObject.get().name());
@@ -123,7 +152,16 @@ public class EditorPane extends JPanel implements EditorTab {
             if(action.getKey().equals("Remove") || action.getKey().equals("Delete")){
                 remove.setEnabled(true);
                 clearButtonAction(remove);
-                remove.addActionListener(e -> OpenGG.asyncExec(action.getValue()));
+                remove.addActionListener(e -> {
+                        BrickBench.CURRENT.player.dropInputs();
+                        KeyboardController.resetKeyStates();
+                        if(JOptionPane.showConfirmDialog(null, "Are you sure you want to delete " + gameObject.get().name() + "?", "Delete " + gameObject.get().name() + "?",
+                                JOptionPane.YES_NO_OPTION) == 0){
+                            OpenGG.asyncExec(action.getValue());
+                        }
+                        BrickBench.CURRENT.player.dropInputs();
+                        KeyboardController.resetKeyStates();
+                });
             }else if(action.getKey().equals("Export")){
                 export.setVisible(true);
                 clearButtonAction(export);

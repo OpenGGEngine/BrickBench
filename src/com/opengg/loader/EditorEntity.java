@@ -254,8 +254,8 @@ public interface EditorEntity<T extends EditorEntity<T>> {
 
                 if(useArrows()){
                     OpenGG.asyncExec(() -> {
-                        String arrowName = name+"-arrow-temp-:123:";
-                        if(WorldEngine.findEverywhereByName(arrowName).size() == 0) {
+                        String arrowName = name+"-ar-tp-123:";
+                        if(WorldEngine.findEverywhereByName(arrowName).isEmpty()) {
                             var arrow = new ArrowComponent(
                                     v -> object.applyPropertyEdit(name, onEdit.get()),
                                     v -> SwingUtilities.invokeLater(() -> vecPanel.setValue(v)))
