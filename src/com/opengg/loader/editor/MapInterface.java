@@ -54,7 +54,7 @@ public class MapInterface extends JFrame implements KeyListener {
         super.setMinimumSize(new Dimension(1280, 1024));
         super.setIconImage(new ImageIcon(Resource.getTexturePath("icon.png")).getImage());
         super.setLayout(new BorderLayout());
-        super.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        super.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         var wholeSplit = createPrimarySplitPanes(JSplitPane.HORIZONTAL_SPLIT);
         wholeSplit.setResizeWeight(0.85);

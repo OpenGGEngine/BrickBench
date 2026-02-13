@@ -70,8 +70,7 @@ import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.*;
 import java.io.File;
@@ -97,7 +96,7 @@ public class BrickBench extends GGApplication
     /**
      * The current editor version.
      */
-    public static final Version VERSION = new Version("v0.3.4.1");
+    public static final Version VERSION = new Version("v0.3.4.2");
     public static final boolean DEVMODE = false;
 
     /**
@@ -396,7 +395,9 @@ public class BrickBench extends GGApplication
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                exit();
+                if(exit()){
+                    window.dispose();
+                }
             }
         });
     }
@@ -518,6 +519,18 @@ public class BrickBench extends GGApplication
         window.pack();
         window.setLocation(0, 0);
         window.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        window.addWindowFocusListener(new WindowFocusListener() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+
+            }
+
+            @Override
+            public void windowLostFocus(WindowEvent e) {
+                BrickBench.CURRENT.player.dropInputs();
+                KeyboardController.resetKeyStates();
+            }
+        });
 
         if (Files.exists(Resource.getUserDataPath().resolve("THINGS_PC.GSC"))) {
             try {
@@ -791,11 +804,11 @@ public class BrickBench extends GGApplication
 
     boolean exited = false;
 
-    public void exit() {
+    public boolean exit() {
         if (exited)
-            return;
+            return true;
         if (!showSaveProjectPrompt())
-            return;
+            return false;
 
         GGConsole.log("Writing config file on exit");
         FileTexture.FileTextureCache.haltIconLoader();
@@ -803,6 +816,7 @@ public class BrickBench extends GGApplication
 
         OpenGG.endApplication();
         exited = true;
+        return true;
     }
 
     public void cleanGameDirectories() {
