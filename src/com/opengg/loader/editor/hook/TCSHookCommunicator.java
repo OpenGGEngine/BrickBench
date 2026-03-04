@@ -39,7 +39,7 @@ public class TCSHookCommunicator {
         WinNT.HANDLE snapshot = Kernel32.INSTANCE.CreateToolhelp32Snapshot(Tlhelp32.TH32CS_SNAPPROCESS, null);
         if(Kernel32.INSTANCE.Process32First(snapshot, entry)){
             while (Kernel32.INSTANCE.Process32Next(snapshot, entry)){
-                if(new String(entry.szExeFile).trim().equals(Configuration.get(executable.GAME.SHORT_NAME + "-hook-executable-name"))){
+                if(new String(entry.szExeFile).trim().equalsIgnoreCase(Configuration.get(executable.GAME.SHORT_NAME + "-hook-executable-name"))){
                     WinNT.HANDLE process = Kernel32.INSTANCE.OpenProcess(WinNT.PROCESS_ALL_ACCESS, false, entry.th32ProcessID.intValue());
                     if(process != null){
                         Memory characterPosValue = new Memory(Kernel32.MAX_PATH);
@@ -139,6 +139,13 @@ public class TCSHookCommunicator {
         Kernel32.INSTANCE.CloseHandle(process);
     }
 
+    public float readFloat(int address){
+        Pointer vecPtr = new Pointer(address);
+        Memory vecMem = new Memory(4);
+        Kernel32.INSTANCE.ReadProcessMemory(process, vecPtr, vecMem, 4, null);
+
+        return vecMem.getFloat(0);
+    }
 
     public Vector3f readVector3f(int address){
         Pointer vecPtr = new Pointer(address);
@@ -309,6 +316,11 @@ public class TCSHookCommunicator {
             throw new Win32Exception(Kernel32.INSTANCE.GetLastError());
         }
         int entryPTR = mem.getInt(0) + 0x10;
+
+        if(Integer.toUnsignedLong(entryPTR) < 0x100){
+            return;
+        }
+
         pointer2 = new Pointer(entryPTR);
         if(!Kernel32.INSTANCE.ReadProcessMemory(process, pointer2, mem, 8, null)){
             throw new Win32Exception(Kernel32.INSTANCE.GetLastError());
@@ -521,6 +533,13 @@ public class TCSHookCommunicator {
         Kernel32.INSTANCE.WriteProcessMemory(process, dataPtr, newData, 8, null);
     }
 
+    public void setByte(long address, byte val){
+        Memory newData = new Memory(1);
+        newData.setByte(0, val);
+        Pointer dataPtr = new Pointer(address);
+        Kernel32.INSTANCE.WriteProcessMemory(process, dataPtr, newData, 1, null);
+    }
+
     public void setCamSpeeds(float camSpeed,float yawSpeed,float pitchSpeed){
         final float camSpeedScale = 0.004999999888f;
         final float yawSpeedScale = 16384.0f;
@@ -535,6 +554,22 @@ public class TCSHookCommunicator {
             case LB1_GOG,LB1_STEAM -> setCamSpeedsImpl(camSpeed * camSpeedScale,-yawSpeed * yawSpeedScale,pitchSpeed * pitchSpeedScale,
                     0x935164,0x673334,0x41b3c7,0x79d258,0x41b379);
         }
+    }
+
+    public void speedHack(float speed){
+        switch (this.executable) {
+            case TCS_STEAM, TCS_GOG -> setFloat(0x297dc24, speed);
+            case LIJ1_GOG -> setFloat(0xae05e0, speed);
+            case LB1_GOG,LB1_STEAM -> setFloat(0xade690, speed);
+        }
+    }
+
+    public float getSpeedHack(){
+        return switch (this.executable) {
+            case TCS_STEAM, TCS_GOG -> readFloat(0x297dc24);
+            case LIJ1_GOG -> readFloat(0xae05e0);
+            case LB1_GOG,LB1_STEAM -> readFloat(0xade690);
+        };
     }
 
     public void setCamSpeedsImpl(float camSpeed,float yawSpeed,float pitchSpeed,long camSpeedAddr,
@@ -579,6 +614,59 @@ public class TCSHookCommunicator {
             case TCS_STEAM, TCS_GOG -> setInt(0x87b538, uiDisable ? 1 : 0);
             case LIJ1_GOG -> setInt(0x9c41ac, uiDisable ? 1 : 0);
             case LB1_GOG,LB1_STEAM -> setInt(0x9c9c30, uiDisable ? 1 : 0);
+        }
+    }
+
+    public void setFPSEnable(boolean fps){
+        switch (this.executable) {
+            case TCS_STEAM, TCS_GOG -> setInt(0x9250d4, fps ? 1 : 0);
+            case LIJ1_GOG -> setInt(0xa90cbc, fps ? 1 : 0);
+            case LB1_GOG, LB1_STEAM-> setInt(0xa95074, fps ? 1 : 0);
+        }
+    }
+
+    public void setPositionEnable(boolean position){
+        switch (this.executable) {
+            case TCS_STEAM, TCS_GOG -> setInt(0x87b734, position ? 1 : 0);
+            case LIJ1_GOG -> setInt(0x9c4398, position ? 1 : 0);
+            case LB1_GOG, LB1_STEAM-> setInt(0x9c9e2c, position ? 1 : 0);
+        }
+    }
+
+    public void setStreamingDisplay(boolean stream){
+        switch (this.executable) {
+            case TCS_STEAM, TCS_GOG -> setInt(0x87b530, stream ? 1 : 0);
+            case LIJ1_GOG -> setInt(0x9c41a4, stream ? 1 : 0);
+            case LB1_GOG, LB1_STEAM-> setInt(0x9c9c28, stream ? 1 : 0);
+        }
+    }
+
+    public void setLiftPlayer(boolean liftPlayer){
+        switch (this.executable) {
+            case TCS_STEAM, TCS_GOG -> setInt(0x93d850, liftPlayer ? 1 : 0);
+            case LIJ1_GOG -> setInt(0xaae23c, liftPlayer ? 1 : 0);
+            case LB1_GOG, LB1_STEAM -> setInt(0xab29b4, liftPlayer ? 1 : 0);
+        }
+    }
+
+    public void setJediBattle(Integer seed, Integer pointLayout) {
+        switch (this.executable) {
+            case TCS_GOG -> {
+                if(seed != null) setInt(0x8066c0, seed);
+                if(pointLayout != null) setInt(0x888efc, pointLayout);
+            }
+        }
+    }
+
+    public void resetPodraceLap3() {
+        Pointer podAddr = new Pointer(0x8824b0);
+        Memory podMem = new Memory(4);
+        Kernel32.INSTANCE.ReadProcessMemory(process, podAddr, podMem, 4, null);
+
+        long podPtr = Integer.toUnsignedLong(podMem.getInt(0));
+
+        if(podPtr > 0){
+            setByte(podPtr+0xe6b, (byte)1);
         }
     }
 

@@ -1,9 +1,11 @@
 package com.opengg.loader.editor.hook;
 
+import com.formdev.flatlaf.icons.FlatFileViewFloppyDriveIcon;
 import com.opengg.core.console.GGConsole;
 import com.opengg.core.math.Vector3f;
 import com.opengg.loader.MapXml;
 import com.opengg.loader.SwingUtil;
+import com.opengg.loader.editor.EditorIcons;
 import com.opengg.loader.editor.MapInterface;
 import com.opengg.loader.editor.components.WrapLayout;
 import com.opengg.loader.editor.hook.TCSHookManager.GameExecutable;
@@ -37,6 +39,7 @@ import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @EditorTabAutoRegister
 public class TCSHookPanel extends JPanel implements EditorTab {
@@ -44,6 +47,15 @@ public class TCSHookPanel extends JPanel implements EditorTab {
     private JButton connectButton;
     private JTextField mapID;
     private JCheckBox door, reset;
+
+
+    private JCheckBox podraceLap3;
+    private JTextField point121Seeds;
+    private JTextField waveSeeds;
+
+    private JTextField speedHackField = new JTextField(Float.toString(1));
+    private JButton speedButton = new JButton("Set Speed");
+
     private JComboBox<String> mapCombo, doorCombo;
     private Map<String, Integer> mapNameToID = new HashMap<>();
     private Map<Integer, String> mapIDToDirectory = new HashMap<>();
@@ -58,9 +70,15 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         connectButton = new JButton("Start Hook");
         connectButton.addActionListener(a -> {
             if(!TCSHookManager.isEnabled()){
-                generateGameSelectMenu(null).show(connectButton, 0 , connectButton.getHeight());
+                generateGameSelectMenu(()->{
+                    if(TCSHookManager.isEnabled() && TCSHookManager.currentHook.getExecutable() == GameExecutable.TCS_GOG){
+                        this.setTCSEnabledUI(true);
+                    }
+                }).show(connectButton, 0 , connectButton.getHeight());
             }else{
                 TCSHookManager.endHook();
+
+                setTCSEnabledUI(false);
             }
         });
         hookManagerPanel.add(connectButton);
@@ -106,6 +124,9 @@ public class TCSHookPanel extends JPanel implements EditorTab {
 
                         doorCombo.setModel(new DefaultComboBoxModel<>(doors));
                     } catch (FileNotFoundException e) {
+                        Vector<String> doors = new Vector<>();
+                        doors.add("<Default Start>");
+                        doorCombo.setModel(new DefaultComboBoxModel<>(doors));
                         GGConsole.log("Unable to read txt file for map. Are your files fully extracted?");
                     } catch (Exception e) {
                         System.out.println(e);
@@ -128,6 +149,247 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         this.add(hookManagerPanel, BorderLayout.NORTH);
 
         JTabbedPane tabPane = new JTabbedPane();
+
+        var configPanel = new JPanel(new MigLayout("wrap 1"));
+        configPanel.setLayout(new BoxLayout(configPanel, BoxLayout.Y_AXIS));
+
+        reset = new JCheckBox("Reset map on load");
+        door = new JCheckBox("Reset door on load");
+        door.addActionListener(e->{
+            doorCombo.setEnabled(door.isSelected());
+        });
+        configPanel.add(reset, "span");
+        configPanel.add(door, "span");
+
+        var autoload = new JCheckBox("Autoload maps from current hooked game");
+
+        autoload.setSelected(Boolean.parseBoolean(Configuration.getConfigFile("editor.ini").getConfig("autoload-hook")));
+        autoload.addActionListener(a -> {
+            Configuration.getConfigFile("editor.ini").writeConfig("autoload-hook", String.valueOf(autoload.isSelected())); BrickBench.CURRENT.reloadConfigFileData();
+        });
+        autoload.setToolTipText("Automatically loads the current map in the hooked game instance.");
+        configPanel.add(autoload);
+
+        loadMap.addActionListener(a -> {
+            loadCurrentMap();
+        });
+
+        var global = new JCheckBox("Enable global hotkeys");
+        global.addActionListener(a -> {
+            try {
+                if(global.isSelected()){
+                    if(!GlobalScreen.isNativeHookRegistered()) {
+                        GlobalScreen.registerNativeHook();
+                    }
+                    Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+                    logger.setLevel(Level.SEVERE);
+                    logger.setUseParentHandlers(false);
+
+                    GlobalScreen.addNativeKeyListener(BrickBench.CURRENT);
+
+                    JOptionPane.showMessageDialog(this, "Registered global key hook.");
+                }else{
+                    GlobalScreen.removeNativeKeyListener(BrickBench.CURRENT);
+                    JOptionPane.showMessageDialog(this, "De-registered global key hook.");
+                }
+
+
+            } catch (NativeHookException e) {
+                SwingUtil.showErrorAlert("Failed to register the global hook", e);
+            }
+        });
+
+        configPanel.add(global);
+        //configPanel.setFocusable(false);
+
+        tabPane.add("Settings", configPanel);
+        tabPane.add("Advanced Settings", createMapLoadPanel());
+        tabPane.add("Misc Tools", createToolsPanel());
+        tabPane.add("Entities", createEntityPanel());
+        tabPane.add("Free Cam", createFreeCamPanel());
+        tabPane.add("AI Messages", createAIMessagePanel());
+        add(tabPane, BorderLayout.CENTER);
+    }
+
+    public JPanel createMapLoadPanel(){
+        JPanel mapLoadPanel = new JPanel(new MigLayout("fillx, wrap 4"));
+        mapLoadPanel.add(new JLabel("<html><b>Complete Saga Map Options</b></html>"), "span,growx,center");
+
+        podraceLap3 = new JCheckBox("Set to Podrace Lap 3");
+        podraceLap3.setToolTipText("If checked, load map will try to set the podrace lap to lap 3.");
+        mapLoadPanel.add(podraceLap3, "span");
+
+        mapLoadPanel.add(new JLabel("Jedi Battle Seed(s)"),"span 1");
+        waveSeeds = new JTextField();
+        mapLoadPanel.add(waveSeeds, "span 3, growx, pushx");
+
+        mapLoadPanel.add(new JLabel("Jedi Battle Point Layout(s)"));
+        point121Seeds = new JTextField();
+        mapLoadPanel.add(point121Seeds, "span 3, growx, pushx");
+
+        setTCSEnabledUI(false);
+
+        return mapLoadPanel;
+    }
+
+    public JPanel createEntityPanel(){
+        JPanel entityPanel = new JPanel(new MigLayout("wrap 4, ins 15"));
+
+        entityPanel.add(new JLabel("Player 1"), "wrap");
+        JTextField p1heart = new JTextField();
+        entityPanel.add(p1heart, "span 3, growx");
+        JButton savep1Heart = new JButton(new FlatFileViewFloppyDriveIcon());
+        entityPanel.add(savep1Heart, "span 1");
+
+        entityPanel.add(new JLabel("Player 2"), "wrap");
+        JTextField p2heart = new JTextField();
+        entityPanel.add(p2heart, "span 3, growx");
+        JButton savep2Heart = new JButton(new FlatFileViewFloppyDriveIcon());
+        entityPanel.add(savep2Heart, "span 1");
+
+        return entityPanel;
+    }
+
+    public JPanel createToolsPanel(){
+        JPanel toolsPanel = new JPanel(new MigLayout());
+        toolsPanel.add(new JLabel("Speed Multiplier"),"span 3, split 3, center, gaptop 15");
+        toolsPanel.add(speedHackField);
+        speedHackField.setToolTipText("60 hz is the baseline for speed 1");
+        speedButton.addActionListener(ev -> {
+            try{
+                if(TCSHookManager.currentHook != null){
+                    float speed = Math.abs(Float.parseFloat(speedHackField.getText()));
+                    if(Math.abs(speed - 1) < 0.0001f || Math.abs(speed-1) <= 0.001){
+                        TCSHookManager.currentHook.speedHack(0);
+                    }else{
+                        TCSHookManager.currentHook.speedHack(speed * (1/60f));
+                    }
+                }
+            } catch (Exception _) {
+            }
+        });
+        toolsPanel.add(speedButton, "wrap");
+
+        JCheckBox disableUICheckBox = new JCheckBox("Disable UI");
+        disableUICheckBox.addItemListener(e -> {
+            if(TCSHookManager.currentHook != null) {
+                TCSHookManager.currentHook.setUIDisable(e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        toolsPanel.add(disableUICheckBox, "wrap");
+
+        JCheckBox showFPS =  new JCheckBox("Show FPS");
+        showFPS.addItemListener(e -> {
+            if(TCSHookManager.currentHook != null) {
+                TCSHookManager.currentHook.setFPSEnable(e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        toolsPanel.add(showFPS, "wrap");
+
+        JCheckBox showLevelStreaming =  new JCheckBox("Show Level Streaming");
+        showLevelStreaming.addItemListener(e -> {
+            if(TCSHookManager.currentHook != null) {
+                TCSHookManager.currentHook.setStreamingDisplay(e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        toolsPanel.add(showLevelStreaming, "wrap");
+
+        JCheckBox showPositions =  new JCheckBox("Show Positions");
+        showPositions.addItemListener(e -> {
+            if(TCSHookManager.currentHook != null) {
+                TCSHookManager.currentHook.setPositionEnable(e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        toolsPanel.add(showPositions, "wrap");
+
+        JCheckBox liftPlayer =  new JCheckBox("Lift Player");
+        liftPlayer.addItemListener(e -> {
+            if(TCSHookManager.currentHook != null) {
+                TCSHookManager.currentHook.setLiftPlayer(e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        toolsPanel.add(liftPlayer, "wrap");
+
+        return toolsPanel;
+    }
+
+    public JPanel createFreeCamPanel(){
+        var camSpeedField = new JTextField("1");
+        var camYawSpeedField = new JTextField("1");
+        var camPitchSpeedField = new JTextField("1");
+
+        JPanel freeCamPanel = new JPanel(new MigLayout("ins 15"));
+        freeCamPanel.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        freeCamPanel.setAlignmentY(java.awt.Component.TOP_ALIGNMENT);
+
+        JCheckBox freeCamCheckBox = new JCheckBox("Enable Free Cam");
+        freeCamCheckBox.addItemListener(e -> {
+            if(TCSHookManager.currentHook != null) {
+                if(e.getStateChange() == ItemEvent.SELECTED) {
+                    TCSHookManager.currentHook.setCamEnable(true);
+
+                    TCSHookManager.currentHook.setCamSpeeds(Float.parseFloat(camSpeedField.getText()),
+                            Float.parseFloat(camYawSpeedField.getText()),Float.parseFloat(camPitchSpeedField.getText()));
+                } else {
+                    TCSHookManager.currentHook.setCamEnable(false);
+                }
+            }
+        });
+
+        freeCamPanel.add(freeCamCheckBox,"span 2, split 2,center");
+
+        JButton updateCamSpeeds = new JButton("Update Cam Speeds");
+        updateCamSpeeds.addActionListener((e)->{
+            if(TCSHookManager.currentHook != null && freeCamCheckBox.isSelected()) {
+                TCSHookManager.currentHook.setCamSpeeds(Float.parseFloat(camSpeedField.getText()),
+                        Float.parseFloat(camYawSpeedField.getText()),Float.parseFloat(camPitchSpeedField.getText()));
+            }
+        });
+        freeCamPanel.add(updateCamSpeeds , "wrap");
+        freeCamPanel.add(new JLabel("Cam Speed"));
+
+        ((AbstractDocument)camSpeedField.getDocument()).setDocumentFilter(EditorPane.floatFilter);
+        freeCamPanel.add(camSpeedField , "pushx, growx, wrap");
+
+        freeCamPanel.add(new JLabel("Cam Yaw Speed"));
+
+        ((AbstractDocument)camYawSpeedField.getDocument()).setDocumentFilter(EditorPane.floatFilter);
+        freeCamPanel.add(camYawSpeedField , "pushx, growx, wrap");
+
+        freeCamPanel.add(new JLabel("Cam Pitch Speed"));
+
+        ((AbstractDocument)camPitchSpeedField.getDocument()).setDocumentFilter(EditorPane.floatFilter);
+        freeCamPanel.add(camPitchSpeedField , "pushx, growx, wrap");
+
+        JButton resetCamPos = new JButton("Set Cam Pos to Editor View");
+        resetCamPos.addActionListener((e)->{
+            if(TCSHookManager.currentHook != null && freeCamCheckBox.isSelected()){
+                TCSHookManager.currentHook.setCamPosition(BrickBench.CURRENT.ingamePosition);
+            }
+        });
+
+        JButton resetCamPos2 = new JButton("Set Cam Pos to Player 1");
+        resetCamPos2.addActionListener((e)->{
+            if(TCSHookManager.currentHook != null && freeCamCheckBox.isSelected()){
+                TCSHookManager.currentHook.setCamPosition(TCSHookManager.currentHook.readPlayerLocation(0));
+            }
+        });
+
+        JButton resetCamPos3 = new JButton("Set Cam Pos to Player 2");
+        resetCamPos3.addActionListener((e)->{
+            if(TCSHookManager.currentHook != null && freeCamCheckBox.isSelected()){
+                TCSHookManager.currentHook.setCamPosition(TCSHookManager.currentHook.readPlayerLocation(1));
+            }
+        });
+
+        freeCamPanel.add(resetCamPos,"span 3, split 3, center");
+        freeCamPanel.add(resetCamPos2);
+        freeCamPanel.add(resetCamPos3);
+
+        return freeCamPanel;
+    }
+
+    public JPanel createAIMessagePanel(){
         JPanel aiMessagePanel = new JPanel();
         aiMessagePanel.setLayout(new BorderLayout());
 
@@ -186,137 +448,7 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         buttonRow.add(pushEdit);
 
         aiMessagePanel.add(buttonRow, BorderLayout.NORTH);
-
-        var configPanel = new JPanel(new MigLayout("wrap 1"));
-        configPanel.setLayout(new BoxLayout(configPanel, BoxLayout.Y_AXIS));
-
-        var autoload = new JCheckBox("Autoload maps from current hooked game");
-        reset = new JCheckBox("Reset map on load");
-        door = new JCheckBox("Reset door on load");
-        door.addActionListener(e->{
-            doorCombo.setEnabled(door.isSelected());
-        });
-        autoload.setSelected(Boolean.parseBoolean(Configuration.getConfigFile("editor.ini").getConfig("autoload-hook")));
-        autoload.addActionListener(a -> {
-            Configuration.getConfigFile("editor.ini").writeConfig("autoload-hook", String.valueOf(autoload.isSelected())); BrickBench.CURRENT.reloadConfigFileData();
-        });
-        autoload.setToolTipText("Automatically loads the current map in the hooked game instance.");
-        configPanel.add(autoload);
-        configPanel.add(reset);
-        configPanel.add(door);
-
-        loadMap.addActionListener(a -> {
-            loadCurrentMap();
-        });
-
-        var global = new JCheckBox("Enable global hotkeys");
-        global.addActionListener(a -> {
-            try {
-                if(global.isSelected()){
-                    if(!GlobalScreen.isNativeHookRegistered()) {
-                        GlobalScreen.registerNativeHook();
-                    }
-                    Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
-                    logger.setLevel(Level.SEVERE);
-                    logger.setUseParentHandlers(false);
-
-                    GlobalScreen.addNativeKeyListener(BrickBench.CURRENT);
-
-                    JOptionPane.showMessageDialog(this, "Registered global key hook.");
-                }else{
-                    GlobalScreen.removeNativeKeyListener(BrickBench.CURRENT);
-                    JOptionPane.showMessageDialog(this, "De-registered global key hook.");
-                }
-
-
-            } catch (NativeHookException e) {
-                SwingUtil.showErrorAlert("Failed to register the global hook", e);
-            }
-        });
-
-        configPanel.add(global);
-
-        tabPane.add("Options", configPanel);
-        tabPane.add("AI Messages", aiMessagePanel);
-
-        var camSpeedField = new JTextField("1");
-        var camYawSpeedField = new JTextField("1");
-        var camPitchSpeedField = new JTextField("1");
-
-        JPanel freeCamPanel = new JPanel(new MigLayout("ins 15"));
-        freeCamPanel.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
-        freeCamPanel.setAlignmentY(java.awt.Component.TOP_ALIGNMENT);
-
-        JCheckBox freeCamCheckBox = new JCheckBox("Enable Free Cam");
-        freeCamCheckBox.addItemListener(e -> {
-            if(TCSHookManager.currentHook != null) {
-                if(e.getStateChange() == ItemEvent.SELECTED) {
-                    TCSHookManager.currentHook.setCamEnable(true);
-
-                    TCSHookManager.currentHook.setCamSpeeds(Float.parseFloat(camSpeedField.getText()),
-                            Float.parseFloat(camYawSpeedField.getText()),Float.parseFloat(camPitchSpeedField.getText()));
-                } else {
-                    TCSHookManager.currentHook.setCamEnable(false);
-                }
-            }
-        });
-
-        JCheckBox disableUICheckBox = new JCheckBox("Disable UI");
-        disableUICheckBox.addItemListener(e -> {
-            if(TCSHookManager.currentHook != null) {
-                if(e.getStateChange() == ItemEvent.SELECTED) {
-                    TCSHookManager.currentHook.setUIDisable(true);
-                } else {
-                    TCSHookManager.currentHook.setUIDisable(false);
-                }
-            }
-        });
-
-        freeCamPanel.add(freeCamCheckBox);
-        freeCamPanel.add(disableUICheckBox , "pushx, growx, wrap");
-        freeCamPanel.add(new JLabel("Cam Speed"));
-
-        ((AbstractDocument)camSpeedField.getDocument()).setDocumentFilter(EditorPane.floatFilter);
-        freeCamPanel.add(camSpeedField , "pushx, growx, wrap");
-
-        freeCamPanel.add(new JLabel("Cam Yaw Speed"));
-
-        ((AbstractDocument)camYawSpeedField.getDocument()).setDocumentFilter(EditorPane.floatFilter);
-        freeCamPanel.add(camYawSpeedField , "pushx, growx, wrap");
-
-        freeCamPanel.add(new JLabel("Cam Pitch Speed"));
-
-        ((AbstractDocument)camPitchSpeedField.getDocument()).setDocumentFilter(EditorPane.floatFilter);
-        freeCamPanel.add(camPitchSpeedField , "pushx, growx, wrap");
-
-        JButton updateCamSpeeds = new JButton("Update Cam Speeds");
-        updateCamSpeeds.addActionListener((e)->{
-            if(TCSHookManager.currentHook != null && freeCamCheckBox.isSelected()) {
-                TCSHookManager.currentHook.setCamSpeeds(Float.parseFloat(camSpeedField.getText()),
-                        Float.parseFloat(camYawSpeedField.getText()),Float.parseFloat(camPitchSpeedField.getText()));
-            }
-        });
-        freeCamPanel.add(updateCamSpeeds,"span 3, split 3, center, gaptop 15");
-
-        JButton resetCamPos = new JButton("Set Cam Position to Editor View");
-        resetCamPos.addActionListener((e)->{
-            if(TCSHookManager.currentHook != null && freeCamCheckBox.isSelected()){
-                TCSHookManager.currentHook.setCamPosition(BrickBench.CURRENT.ingamePosition);
-            }
-        });
-
-        JButton resetCamPos2 = new JButton("Set Cam Position to Player 1");
-        resetCamPos2.addActionListener((e)->{
-            if(TCSHookManager.currentHook != null && freeCamCheckBox.isSelected()){
-                TCSHookManager.currentHook.setCamPosition(TCSHookManager.currentHook.readPlayerLocation(0));
-            }
-        });
-
-        freeCamPanel.add(resetCamPos);
-        freeCamPanel.add(resetCamPos2);
-
-        tabPane.add("Free Cam", freeCamPanel);
-        add(tabPane, BorderLayout.CENTER);
+        return aiMessagePanel;
     }
 
     public static JPopupMenu generateGameSelectMenu(Runnable onSelect) {
@@ -330,6 +462,7 @@ public class TCSHookPanel extends JPanel implements EditorTab {
             var execItem = new JMenuItem(executable.NAME);
             execItem.addActionListener(a -> {
                 TCSHookManager.beginHook(executable);
+
                 if (onSelect != null) onSelect.run();
             });
             menu.add(execItem);
@@ -340,18 +473,74 @@ public class TCSHookPanel extends JPanel implements EditorTab {
 
     public void loadCurrentMap() {
         if(TCSHookManager.isEnabled()) {
-            String selectedDoor = ((doorCombo.getSelectedIndex() == 0) || (doorCombo.getSelectedItem() == null)) ? "" : (String)doorCombo.getSelectedItem();
-            selectedDoor = selectedDoor.toLowerCase();
+            if(!podraceLap3.isSelected()) {
 
-            if(door.isSelected()){
-                TCSHookManager.currentHook.resetDoor(selectedDoor);
+                String seed1 = waveSeeds.getText();
+                String seed2 = point121Seeds.getText();
+
+                if(!seed1.isBlank() || !seed2.isBlank()){
+                    Random rand = new Random();
+
+                    seed1 = seed1.replaceAll("\\s+","");
+                    seed2 = seed2.replaceAll("\\s+","");
+
+                    List<Integer> waveSeeds = Arrays.stream(seed1.split(",")).map((seed) -> {
+                        if(JediBattleConstants.JEDI_SEEDS.containsKey(seed.toLowerCase())){
+                            return JediBattleConstants.JEDI_SEEDS.get(seed.toLowerCase());
+                        }
+                        try{
+                            return Integer.parseInt(seed);
+                        }catch(Exception e){
+                            GGConsole.warning("Invalid Seed: " + seed);
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).toList();
+
+                    List<Integer> pointLayouts = Arrays.stream(seed2.split(",")).map((seed) -> {
+                        try{
+                            return Integer.parseInt(seed);
+                        }catch(Exception e){
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).toList();
+
+                    Integer selectedSeed = waveSeeds.isEmpty() ? null : waveSeeds.get(rand.nextInt(waveSeeds.size()));
+                    Integer selectedPointLayout = pointLayouts.isEmpty() ? 0 : pointLayouts.get(rand.nextInt(pointLayouts.size()));
+
+                    TCSHookManager.currentHook.setJediBattle(selectedSeed, selectedPointLayout);
+                }
+
+                String selectedDoor = ((doorCombo.getSelectedIndex() == 0) || (doorCombo.getSelectedItem() == null)) ? "" : (String) doorCombo.getSelectedItem();
+                selectedDoor = selectedDoor.toLowerCase();
+
+                if (door.isSelected()) {
+                    TCSHookManager.currentHook.resetDoor(selectedDoor);
+                }
+
+                if (reset.isSelected()) {
+                    TCSHookManager.currentHook.setResetBit();
+                }
+                TCSHookManager.currentHook.setTargetMap(Integer.parseInt(mapID.getText()));
+            }else{
+                TCSHookManager.currentHook.resetPodraceLap3();
+            }
+        }
+    }
+
+    public void toggleSpeedhack(){
+        if(TCSHookManager.isEnabled()) {
+            float currentSpeedVal = TCSHookManager.currentHook.getSpeedHack();
+            float speed = Math.abs(Float.parseFloat(speedHackField.getText()));
+
+            if (Math.abs(speed - 1) < 0.0001f || Math.abs(speed-1) <= 0.001) {
+                speed = 1;
             }
 
-            if(reset.isSelected()) {
-                TCSHookManager.currentHook.setResetBit();
+            if(currentSpeedVal == 0){
+                TCSHookManager.currentHook.speedHack(speed * (1/60f));
+            }else{
+                TCSHookManager.currentHook.speedHack(0);
             }
-
-            TCSHookManager.currentHook.setTargetMap(Integer.parseInt(mapID.getText()));
         }
     }
 
@@ -484,12 +673,23 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         }
     }
 
+    public void setTCSEnabledUI(boolean enabled){
+        podraceLap3.setSelected(false);
+        podraceLap3.setEnabled(enabled);
+
+        point121Seeds.setEditable(enabled);
+        point121Seeds.setText("");
+        waveSeeds.setEditable(enabled);
+        waveSeeds.setText("");
+    }
+
     public void updateConnectionUIState(){
         if(TCSHookManager.isEnabled()){
             reloadMaps(TCSHookManager.currentHook.getDirectory());
             connectButton.setText("Close Hook");
         }else{
             connectButton.setText("Open Hook");
+            setTCSEnabledUI(false);
         }
     }
 }

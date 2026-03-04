@@ -41,6 +41,12 @@ public class TCSHookManager {
         if (success) {
             currentHook = hook;
             panel.updateConnectionUIState();
+            if(TCSHookManager.isEnabled()) {
+                if (TCSHookManager.currentHook.getExecutable() == GameExecutable.TCS_GOG)
+                {
+                    panel.setTCSEnabledUI(true);
+                }
+            }
             JOptionPane.showMessageDialog(BrickBench.CURRENT.window, "Connected to process.");
         } else {
             JOptionPane.showMessageDialog(BrickBench.CURRENT.window, "Failed to find a running game instance.");

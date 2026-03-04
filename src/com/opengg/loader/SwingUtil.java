@@ -19,6 +19,7 @@ public class SwingUtil {
     public static LoadingAlert showLoadingAlert(String name, String description, boolean showExit){
         var jop = new JOptionPane(description, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[]{}, null);
         var dialog = jop.createDialog(BrickBench.CURRENT.window, name);
+        dialog.setFocusable(false);
         dialog.setModal(false);
         dialog.setVisible(true);
 
