@@ -670,6 +670,40 @@ public class TCSHookCommunicator {
         }
     }
 
+    public void setHearts(int playerID, byte heartCount){
+        long playerAddress = (playerID == 1 ? currentPlayerOneAddress : currentPlayerTwoAddress);
+
+        if(playerAddress > 0){
+            switch(this.executable){
+                case TCS_GOG -> setByte(playerAddress+0x107f, heartCount);
+                case LIJ1_GOG ->  setByte(playerAddress+0x1523, heartCount);
+                case LB1_GOG, LB1_STEAM -> setByte(playerAddress+0x15c7, heartCount);
+            }
+        }
+    }
+
+    public void setPowerup(int playerID, float timer){
+        long playerAddress = (playerID == 1 ? currentPlayerOneAddress : currentPlayerTwoAddress);
+
+        if(playerAddress > 0){
+            switch(this.executable){
+                case TCS_GOG -> setFloat(playerAddress+0xdec, timer);
+                case LIJ1_GOG ->  setFloat(playerAddress+0x123c, timer);
+                case LB1_GOG, LB1_STEAM -> setFloat(playerAddress+0x1278, timer);
+            }
+        }
+    }
+
+    public void setHelmet(int playerID, int helmet){
+        long playerAddress = (playerID == 1 ? currentPlayerOneAddress : currentPlayerTwoAddress);
+
+        if(playerAddress > 0){
+            switch(this.executable){
+                case TCS_GOG -> setByte(playerAddress+0x1082, (byte)helmet);
+            }
+        }
+    }
+
 /*
     public Vector3f getCameraPosition(){
         Pointer camPtr = new Pointer(0x008021b4);

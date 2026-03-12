@@ -7,6 +7,7 @@ import com.opengg.loader.MapXml;
 import com.opengg.loader.SwingUtil;
 import com.opengg.loader.editor.EditorIcons;
 import com.opengg.loader.editor.MapInterface;
+import com.opengg.loader.editor.components.JVectorField;
 import com.opengg.loader.editor.components.WrapLayout;
 import com.opengg.loader.editor.hook.TCSHookManager.GameExecutable;
 import com.opengg.loader.editor.tabs.EditorPane;
@@ -49,16 +50,18 @@ public class TCSHookPanel extends JPanel implements EditorTab {
     private JCheckBox door, reset;
 
 
-    private JCheckBox podraceLap3;
-    private JTextField point121Seeds;
-    private JTextField waveSeeds;
+    private JCheckBox podraceLap3 = new JCheckBox("Set to Podrace Lap 3");
+    private JTextField point121Seeds = new JTextField();
+    private JTextField waveSeeds = new JTextField();
 
     private JTextField speedHackField = new JTextField(Float.toString(1));
     private JButton speedButton = new JButton("Set Speed");
 
-    private JComboBox<String> mapCombo, doorCombo;
+    private JComboBox<String> mapCombo, doorCombo, hatP1Combo = new JComboBox<>(), hatP2Combo = new JComboBox<>();
     private Map<String, Integer> mapNameToID = new HashMap<>();
     private Map<Integer, String> mapIDToDirectory = new HashMap<>();
+
+    private JTextField p1Heart, p2Heart, p1PowerUp, p2PowerUp;
 
     public TCSHookPanel() {
         setLayout(new BorderLayout());
@@ -215,16 +218,13 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         JPanel mapLoadPanel = new JPanel(new MigLayout("fillx, wrap 4"));
         mapLoadPanel.add(new JLabel("<html><b>Complete Saga Map Options</b></html>"), "span,growx,center");
 
-        podraceLap3 = new JCheckBox("Set to Podrace Lap 3");
         podraceLap3.setToolTipText("If checked, load map will try to set the podrace lap to lap 3.");
         mapLoadPanel.add(podraceLap3, "span");
 
         mapLoadPanel.add(new JLabel("Jedi Battle Seed(s)"),"span 1");
-        waveSeeds = new JTextField();
         mapLoadPanel.add(waveSeeds, "span 3, growx, pushx");
 
         mapLoadPanel.add(new JLabel("Jedi Battle Point Layout(s)"));
-        point121Seeds = new JTextField();
         mapLoadPanel.add(point121Seeds, "span 3, growx, pushx");
 
         setTCSEnabledUI(false);
@@ -233,19 +233,49 @@ public class TCSHookPanel extends JPanel implements EditorTab {
     }
 
     public JPanel createEntityPanel(){
-        JPanel entityPanel = new JPanel(new MigLayout("wrap 4, ins 15"));
+        JPanel entityPanel = new JPanel(new MigLayout("fillx, wrap 4, ins 15"));
 
-        entityPanel.add(new JLabel("Player 1"), "wrap");
-        JTextField p1heart = new JTextField();
-        entityPanel.add(p1heart, "span 3, growx");
-        JButton savep1Heart = new JButton(new FlatFileViewFloppyDriveIcon());
-        entityPanel.add(savep1Heart, "span 1");
+        entityPanel.add(new JLabel("<html><b>Player 1</b></html>"), "span 1");
+        JButton savep1 = new JButton("Push Changes");
+        entityPanel.add(savep1, "span 3");
 
-        entityPanel.add(new JLabel("Player 2"), "wrap");
-        JTextField p2heart = new JTextField();
-        entityPanel.add(p2heart, "span 3, growx");
-        JButton savep2Heart = new JButton(new FlatFileViewFloppyDriveIcon());
-        entityPanel.add(savep2Heart, "span 1");
+        entityPanel.add(new JLabel("Hearts"), "span 1");
+        p1Heart = new JTextField();
+        entityPanel.add(p1Heart, "span 1");
+
+        savep1.addActionListener(e->{
+            setPlayerData(1);
+        });
+
+        entityPanel.add(new JLabel("Hat"), "span 1");
+        entityPanel.add(hatP1Combo, "span 1");
+
+        entityPanel.add(new JLabel("Current Power Up Timer"), "span 1");
+        p1PowerUp = new JTextField();
+        p1PowerUp.setToolTipText("Remaining duration in seconds of power up status on player.");
+        entityPanel.add(p1PowerUp, "span 1, wrap");
+
+        entityPanel.add(new JSeparator(), "span 4, growx");
+
+        entityPanel.add(new JLabel("<html><b>Player 2</b></html>"), "span 1");
+        JButton savep2 = new JButton("Push Changes");
+        entityPanel.add(savep2, "span 3");
+
+        entityPanel.add(new JLabel("Hearts"), "span 1");
+        p2Heart = new JTextField();
+        entityPanel.add(p2Heart, "span 1");
+
+        savep2.addActionListener(e->{
+            setPlayerData(2);
+        });
+
+        entityPanel.add(new JLabel("Hat"), "span 1");
+        entityPanel.add(hatP2Combo, "span 1");
+
+        entityPanel.add(new JLabel("Current Power Up Timer"), "span 1");
+        p2PowerUp = new JTextField();
+        p2PowerUp.setToolTipText("Remaining duration in seconds of power up status on player.");
+        entityPanel.add(p2PowerUp, "span 1, wrap");
 
         return entityPanel;
     }
@@ -527,6 +557,52 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         }
     }
 
+    public void setPlayerData(int player){
+        if(TCSHookManager.isEnabled()){
+            if(player == 1){
+                if(!p1Heart.getText().isBlank()) {
+                    try {
+                        byte p1Hearts = Byte.parseByte(p1Heart.getText());
+                        TCSHookManager.currentHook.setHearts(1, p1Hearts);
+                    } catch (NumberFormatException _) {
+                    }
+                }
+                if(!p1PowerUp.getText().isBlank()){
+                    try{
+                        float duration = Float.parseFloat(p1PowerUp.getText());
+                        TCSHookManager.currentHook.setPowerup(1, duration);
+                    }catch(NumberFormatException _){
+                        GGConsole.warning("Invalid Power Up Duration: " + p1PowerUp.getText());
+                    }
+                }
+
+                if(hatP1Combo.getSelectedIndex() != 0){
+                    TCSHookManager.currentHook.setHelmet(1, hatP1Combo.getSelectedIndex() - 1);
+                }
+            }else if (player == 2){
+                if(!p2Heart.getText().isBlank()) {
+                    try {
+                        byte p2Hearts = Byte.parseByte(p2Heart.getText());
+                        TCSHookManager.currentHook.setHearts(2, p2Hearts);
+                    } catch (NumberFormatException _) {
+                    }
+                }
+                if(!p2PowerUp.getText().isBlank()) {
+                    try {
+                        float duration = Float.parseFloat(p2PowerUp.getText());
+                        TCSHookManager.currentHook.setPowerup(2, duration);
+                    } catch (NumberFormatException _) {
+                        GGConsole.warning("Invalid Power Up Duration: " + p2PowerUp.getText());
+                    }
+                }
+
+                if(hatP2Combo.getSelectedIndex() != 0){
+                    TCSHookManager.currentHook.setHelmet(2, hatP2Combo.getSelectedIndex() - 1);
+                }
+            }
+        }
+    }
+
     public void toggleSpeedhack(){
         if(TCSHookManager.isEnabled()) {
             float currentSpeedVal = TCSHookManager.currentHook.getSpeedHack();
@@ -681,6 +757,30 @@ public class TCSHookPanel extends JPanel implements EditorTab {
         point121Seeds.setText("");
         waveSeeds.setEditable(enabled);
         waveSeeds.setText("");
+
+        String[] tcsHats = new String[]{
+                "",
+                "Clear Worn Hat",
+                "Leia",
+                "Fedora",
+                "Top Hat",
+                "Baseball Cap",
+                "Stormtrooper",
+                "Bounty Hunter",
+                "Droid Panel"
+        };
+
+        if(enabled){
+            hatP1Combo.setModel(new DefaultComboBoxModel<>(tcsHats));
+            hatP2Combo.setModel(new DefaultComboBoxModel<>(tcsHats));
+            hatP1Combo.setSelectedIndex(0);
+            hatP2Combo.setSelectedIndex(0);
+        }else{
+            hatP1Combo.setModel(new DefaultComboBoxModel<>(new String[]{""}));
+            hatP2Combo.setModel(new DefaultComboBoxModel<>(new String[]{""}));
+            hatP1Combo.setSelectedIndex(0);
+            hatP2Combo.setSelectedIndex(0);
+        }
     }
 
     public void updateConnectionUIState(){

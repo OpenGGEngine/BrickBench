@@ -96,7 +96,7 @@ public class BrickBench extends GGApplication
     /**
      * The current editor version.
      */
-    public static final Version VERSION = new Version("v0.3.4.2");
+    public static final Version VERSION = new Version("v0.4.0.0");
     public static final boolean DEVMODE = false;
 
     /**
@@ -284,6 +284,8 @@ public class BrickBench extends GGApplication
                 Configuration.getConfigFile("editor.ini").writeConfig(entry.getKey(), entry.getValue());
             }
         }
+
+        BrickbenchBindings.load(Path.of(dataPath.toString(), "config", "brickbenchbinds.ini").toString());
 
         Files.createDirectories(dataPath.resolve("export"));
         Files.createDirectories(dataPath.resolve("export/meshes"));
@@ -814,6 +816,8 @@ public class BrickBench extends GGApplication
         FileTexture.FileTextureCache.haltIconLoader();
         Configuration.writeFile(Configuration.getConfigFile("editor.ini"));
 
+        BrickbenchBindings.save(GGInfo.getUserDataPath().resolve( Path.of("config", "brickbenchbinds.ini")).toString());
+
         OpenGG.endApplication();
         exited = true;
         return true;
@@ -873,13 +877,34 @@ public class BrickBench extends GGApplication
         if (key == KEY_F2) {
             takeScreenshot();
         }
-        if (key == KEY_T && TCSHookManager.currentHook != null) {
-            if (KeyboardController.isKeyPressed(KEY_LEFT_CONTROL)) {
-                TCSHookManager.currentHook.teleportToPosition(2, ingamePosition);
-            } else {
+
+        if(TCSHookManager.currentHook != null){
+            if(BrickbenchBindings.isOpenGGBindPressed(key, "teleport1")){
                 TCSHookManager.currentHook.teleportToPosition(1, ingamePosition);
             }
+
+            if(BrickbenchBindings.isOpenGGBindPressed(key, "teleport2")){
+                TCSHookManager.currentHook.teleportToPosition(2, ingamePosition);
+            }
+
+            if(BrickbenchBindings.isOpenGGBindPressed(key, "loadMap1") ||
+                    BrickbenchBindings.isOpenGGBindPressed(key, "loadMap2")){
+                TCSHookManager.panel.loadCurrentMap();
+            }
+
+            if(BrickbenchBindings.isOpenGGBindPressed(key, "speedHackOn")){
+                TCSHookManager.panel.toggleSpeedhack();
+            }
+
+            if(BrickbenchBindings.isOpenGGBindPressed(key, "p1SetData")){
+                TCSHookManager.panel.setPlayerData(1);
+            }
+
+            if(BrickbenchBindings.isOpenGGBindPressed(key, "p2SetData")){
+                TCSHookManager.panel.setPlayerData(2);
+            }
         }
+
         if (key == KEY_ENTER) {
             player.setUsingMouse(!player.isUsingMouse());
             WindowController.getWindow().setCursorLock(player.isUsingMouse());
@@ -956,10 +981,6 @@ public class BrickBench extends GGApplication
         if (key == KEY_EQUAL) {
             player.setSpeed(Math.max(0, player.getSpeed() + 4f));
         }
-
-        if (key == KEY_F12 || key == KEY_BACKSLASH) {
-            TCSHookManager.panel.loadCurrentMap();
-        }
     }
 
     @Override
@@ -967,7 +988,7 @@ public class BrickBench extends GGApplication
     }
 
     @Override
-    public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {
+    public void nativeKeyTyped(NativeKeyEvent nativeEvent) {
 
     }
 
@@ -977,17 +998,31 @@ public class BrickBench extends GGApplication
             nativeCtrlPressed = true;
         }
 
-        if (nativeEvent.getKeyCode() == NativeKeyEvent.VC_T && TCSHookManager.currentHook != null) {
-            if (nativeCtrlPressed) {
-                TCSHookManager.currentHook.teleportToPosition(2, ingamePosition);
-            } else {
+        if(TCSHookManager.currentHook != null){
+            if(BrickbenchBindings.isNativeBindPressed(nativeEvent, "teleport1")){
                 TCSHookManager.currentHook.teleportToPosition(1, ingamePosition);
             }
-        }
 
-        if ((nativeEvent.getKeyCode() == NativeKeyEvent.VC_F12
-                || nativeEvent.getKeyCode() == NativeKeyEvent.VC_BACK_SLASH) && TCSHookManager.currentHook != null) {
-            TCSHookManager.panel.loadCurrentMap();
+            if(BrickbenchBindings.isNativeBindPressed(nativeEvent, "teleport2")){
+                TCSHookManager.currentHook.teleportToPosition(2, ingamePosition);
+            }
+
+            if(BrickbenchBindings.isNativeBindPressed(nativeEvent, "loadMap1") ||
+                    BrickbenchBindings.isNativeBindPressed(nativeEvent, "loadMap2")){
+                TCSHookManager.panel.loadCurrentMap();
+            }
+
+            if(BrickbenchBindings.isNativeBindPressed(nativeEvent, "speedHackOn")){
+                TCSHookManager.panel.toggleSpeedhack();
+            }
+
+            if(BrickbenchBindings.isNativeBindPressed(nativeEvent, "p1SetData")){
+                TCSHookManager.panel.setPlayerData(1);
+            }
+
+            if(BrickbenchBindings.isNativeBindPressed(nativeEvent, "p2SetData")){
+                TCSHookManager.panel.setPlayerData(2);
+            }
         }
     }
 

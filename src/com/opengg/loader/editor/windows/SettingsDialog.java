@@ -3,13 +3,16 @@ package com.opengg.loader.editor.windows;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.util.UIScale;
 import com.opengg.core.Configuration;
+import com.opengg.core.GGInfo;
 import com.opengg.core.console.GGConsole;
 import com.opengg.core.engine.Resource;
 import com.opengg.loader.FileUtil;
 import com.opengg.loader.Project.GameVersion;
 import com.opengg.loader.BrickBench;
+import com.opengg.loader.editor.BrickbenchBindings;
 import com.opengg.loader.editor.EditorTheme;
 import com.opengg.loader.editor.components.FileSelectField;
+import com.opengg.loader.editor.components.HotkeyButton;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -24,6 +27,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
 
 public class SettingsDialog extends JDialog {
 
@@ -43,7 +48,7 @@ public class SettingsDialog extends JDialog {
         settingsMenuPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         settingsMenuPanel.setPreferredSize(new Dimension(350, 400));
         settingsMenuPanel.setLayout(new BoxLayout(settingsMenuPanel, BoxLayout.Y_AXIS));
-        String[] s = new String[]{"Look and Feel", "Controls", "Editor", "Game Hook", "Advanced"};
+        String[] s = new String[]{"Look and Feel", "Controls", "Editor", "Game Hook", "Advanced" , "Key Bindings"};
         var list = new JList<>(s);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
@@ -61,6 +66,7 @@ public class SettingsDialog extends JDialog {
                 case 1 -> useControlsPanel();
                 case 3 -> useHookPanel();
                 case 4 -> useAdvancedPanel();
+                case 5 -> useHotkeysPanel();
                 default -> GGConsole.warning("Invalid Menu Option");
             }
         });
@@ -76,6 +82,7 @@ public class SettingsDialog extends JDialog {
             @Override
             public void windowClosing(WindowEvent e) {
                 Configuration.writeFile(Configuration.getConfigFile("editor.ini"));
+                BrickbenchBindings.save(GGInfo.getUserDataPath().resolve( Path.of("config", "brickbenchbinds.ini")).toString());
             }
         });
 
@@ -86,7 +93,15 @@ public class SettingsDialog extends JDialog {
     private void useControlsPanel(){
         resetPanel();
 
-        var sensitivity = new JSlider(JSlider.HORIZONTAL, 1, 30, (int) (Float.parseFloat(Configuration.get("sensitivity"))*20));
+        float fSens = 0.5f;
+
+        try{
+            fSens = Float.parseFloat(Configuration.get("sensitivity"));
+        }catch(NumberFormatException e){
+            GGConsole.warning("Invalid Sensitivity in config: " + Configuration.get("sensitivity"));
+        }
+
+        var sensitivity = new JSlider(JSlider.HORIZONTAL, 1, 30, (int) (fSens*20));
         sensitivity.setPaintTicks(true);
         sensitivity.setPaintLabels(true);
         sensitivity.setMajorTickSpacing(20);
@@ -267,6 +282,18 @@ public class SettingsDialog extends JDialog {
         addItem("Load GSC files as", format);
         addCompactItem("Rotate terrain platforms", rotateTerrain);
         addCompactItem("Cache textures", cacheTextures);
+
+        this.settingsPanel.validate();
+        this.settingsPanel.repaint();
+        this.validate();
+    }
+
+    private void useHotkeysPanel(){
+        resetPanel();
+
+        for(Map.Entry<String, BrickbenchBindings.Binding> entry : BrickbenchBindings.keyMap.entrySet()){
+            addItem(entry.getValue().displayName, new HotkeyButton(entry.getValue(), this));
+        }
 
         this.settingsPanel.validate();
         this.settingsPanel.repaint();
