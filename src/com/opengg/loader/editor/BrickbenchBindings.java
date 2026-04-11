@@ -35,6 +35,15 @@ public class BrickbenchBindings {
 
     public static void load(String path){
 
+        // Camera movement bindings (shown in Controls panel)
+        keyMap.put("cam_forward", new Binding("cam_forward","Camera Forward", KeyStroke.getKeyStroke(KeyEvent.VK_W, 0)));
+        keyMap.put("cam_backward", new Binding("cam_backward","Camera Backward", KeyStroke.getKeyStroke(KeyEvent.VK_S, 0)));
+        keyMap.put("cam_left", new Binding("cam_left","Camera Left", KeyStroke.getKeyStroke(KeyEvent.VK_A, 0)));
+        keyMap.put("cam_right", new Binding("cam_right","Camera Right", KeyStroke.getKeyStroke(KeyEvent.VK_D, 0)));
+        keyMap.put("cam_up", new Binding("cam_up","Camera Up", KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0)));
+        keyMap.put("cam_down", new Binding("cam_down","Camera Down", KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0)));
+
+        // Hook bindings (shown in Key Bindings panel)
         keyMap.put("teleport1", new Binding("teleport1","Teleport Player 1", KeyStroke.getKeyStroke(KeyEvent.VK_T,0)));
         keyMap.put("teleport2", new Binding("teleport2","Teleport Player 2", KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_MASK | KeyEvent.CTRL_DOWN_MASK)));
         keyMap.put("loadMap1", new Binding("loadMap1","Load Map", KeyStroke.getKeyStroke(KeyEvent.VK_F12, 0)));
@@ -60,6 +69,21 @@ public class BrickbenchBindings {
             GGConsole.log("No Binds File Found. Initializing Default Binds.");
         } catch (IOException e){
             e.printStackTrace();
+        }
+    }
+
+    private static final java.util.Map<String, String> CAM_ACTION_MAP = java.util.Map.of(
+            "cam_forward","forward", "cam_backward","backward",
+            "cam_left","left", "cam_right","right",
+            "cam_up","up", "cam_down","down");
+
+    public static void reapplyCameraBindings() {
+        for (var entry : CAM_ACTION_MAP.entrySet()) {
+            var bind = getOpenGGKeycode(entry.getKey());
+            if (bind != null) {
+                com.opengg.core.engine.BindController.addBind(
+                        new com.opengg.core.io.Bind(com.opengg.core.io.ControlType.KEYBOARD, entry.getValue(), bind.x()));
+            }
         }
     }
 

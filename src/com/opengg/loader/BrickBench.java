@@ -491,12 +491,8 @@ public class BrickBench extends GGApplication
                 Light.createDirectional(Quaternionf.createXYZ(new Vector3f(0, 0, -0.5f)), new Vector3f(1, 1, 1))));
         WorldEngine.getCurrent().attach(TCSHookManager.enemyManager = new HookCharacterManager());
 
-        BindController.addBind(ControlType.KEYBOARD, "forward", KEY_W);
-        BindController.addBind(ControlType.KEYBOARD, "backward", KEY_S);
-        BindController.addBind(ControlType.KEYBOARD, "left", KEY_A);
-        BindController.addBind(ControlType.KEYBOARD, "right", KEY_D);
-        BindController.addBind(ControlType.KEYBOARD, "up", KEY_SPACE);
-        BindController.addBind(ControlType.KEYBOARD, "down", KEY_LEFT_SHIFT);
+        // Load camera bindings from BrickbenchBindings (customizable via Settings > Controls)
+        BrickbenchBindings.reapplyCameraBindings();
 
         RenderEngine.setProjectionData(ProjectionData.getPerspective(110, 0.2f, 3000f));
 

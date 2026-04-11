@@ -110,7 +110,14 @@ public class SettingsDialog extends JDialog {
                 String.valueOf(sensitivity.getValue()/20f)));
         sensitivity.setToolTipText("Sets the mouse sensitivity for the camera.");
 
-        var fov = new JSlider(JSlider.HORIZONTAL, 30, 150, Integer.parseInt(Configuration.get("fov")));
+        int iFov = 110;
+        try {
+            iFov = Integer.parseInt(Configuration.get("fov"));
+        } catch (NumberFormatException e) {
+            GGConsole.warning("Invalid FOV in config: " + Configuration.get("fov"));
+        }
+
+        var fov = new JSlider(JSlider.HORIZONTAL, 30, 150, iFov);
         fov.setPaintTicks(true);
         fov.setPaintLabels(true);
         fov.setMajorTickSpacing(20);
@@ -135,6 +142,13 @@ public class SettingsDialog extends JDialog {
         addItem("Field of view", fov);
         addItem("Lock camera", camLock);
         addCompactItem("Retain position when loading new maps", retainPos);
+
+        // Camera keybindings
+        for (var entry : BrickbenchBindings.keyMap.entrySet()) {
+            if (entry.getKey().startsWith("cam_")) {
+                addItem(entry.getValue().displayName, new HotkeyButton(entry.getValue(), this));
+            }
+        }
 
         this.settingsPanel.validate();
         this.settingsPanel.repaint();
@@ -292,7 +306,9 @@ public class SettingsDialog extends JDialog {
         resetPanel();
 
         for(Map.Entry<String, BrickbenchBindings.Binding> entry : BrickbenchBindings.keyMap.entrySet()){
-            addItem(entry.getValue().displayName, new HotkeyButton(entry.getValue(), this));
+            if (!entry.getKey().startsWith("cam_")) {
+                addItem(entry.getValue().displayName, new HotkeyButton(entry.getValue(), this));
+            }
         }
 
         this.settingsPanel.validate();
@@ -301,11 +317,16 @@ public class SettingsDialog extends JDialog {
     }
 
     private void resetPanel(){
-        settingsPanel.remove(currentSettingsPanel);
+        settingsPanel.removeAll();
 
         currentSettingsPanel = new JPanel();
-        settingsPanel.add(currentSettingsPanel);
         currentSettingsPanel.setLayout(new MigLayout("wrap 2, fillx, align left top", "[]10[]", "[]15[]"));
+
+        var scrollPane = new JScrollPane(currentSettingsPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        settingsPanel.setLayout(new BorderLayout());
+        settingsPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
     public void addItem(String label, JComponent component){

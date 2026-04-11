@@ -51,6 +51,9 @@ public class HotkeyButton extends JToggleButton implements KeyListener, MouseLis
     public void setBinding(KeyStroke stroke){
         binding.keystroke = stroke;
         BrickbenchBindings.keyMap.put(binding.actionName, binding);
+        if (binding.actionName.startsWith("cam_")) {
+            BrickbenchBindings.reapplyCameraBindings();
+        }
         setText(getKeyText());
         setSelected(false);
     }
